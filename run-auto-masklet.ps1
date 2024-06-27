@@ -117,7 +117,7 @@ Write-Output "Observe that the $startingTable table contains only data that meet
 Write-Output "Observe that other tables, contain data required to maintain referential integrity. You can see how much data has been included from for each table by reviewing the subsetter output (above)."
 Write-Output ""
 Write-Output "Next:"
-Write-Output "We will run anonymize classify to create a classification.json file, documenting the location of any PII."
+Write-Output "We will run anonymize classify to create a classification.json file, documenting the location of any PII:"
 Write-Output "  anonymize classify --database-engine SqlServer --connection-string $targetConnectionString --classification-file $output\classification.json --output-all-columns"
 
 Write-Output ""
@@ -161,7 +161,7 @@ Write-Output "  create a fresh masked copy, with the latest data, on a nightly o
 Write-Output "  basis, or at an appropriate point in your sprint/release cycle."
 Write-Output ""
 Write-Output "Next:"
-Write-Output "We will run the anonymize mask command to mask the PII in $targetDb:"
+Write-Output "We will run the anonymize mask command to mask the PII in ${targetDb}:"
 Write-Output "  anonymize map --classification-file $output\classification.json --masking-file $output\masking.json"
 
 Write-Output ""

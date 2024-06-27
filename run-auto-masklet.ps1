@@ -14,7 +14,7 @@ $trustCert = $true
 
 Write-Output "Configuration:"
 Write-Output "- sqlInstance: $sqlInstance"
-Write-Output "- databaseName: $databaseName"
+Write-Output "- databaseName: $databaseName"cd 
 Write-Output "- sourceDb: $sourceDb"
 Write-Output "- targetDb: $targetDb"  
 Write-Output "- gitRoot: $gitRoot"    
@@ -72,7 +72,7 @@ New-Item -ItemType Directory -Path $output
 # Restore the Northwind database
 Write-Output ""
 Write-Output "Restoring the Northwind database, with name $sourceDb, from the backup file $backupPath"
-Restore-DbaDatabase -SqlInstance $sqlInstance -Path $backupPath -DatabaseName $sourceDb -ReplaceDbNameInFile -WithReplace
+Restore-DbaDatabase -SqlInstance $sqlInstance -Path $backupPath -DatabaseName $sourceDb -ReplaceDbNameInFile -WithReplace -DestinationFileSuffix "_FullRestore"
 
 # Create a schema only copy
 Write-Output ""
@@ -93,7 +93,7 @@ Write-Output "It will also include any data from any other tables that are requi
 Write-Output ""
 $continue = Read-Host "Continue? (y/n)"
 if ($continue -notlike "y"){
-    Write-output "Response not like ''y''. Teminating script."
+    Write-output 'Response not like "y". Teminating script.'
     break
 }
 
@@ -113,7 +113,7 @@ Write-Output "We will run anonymize to create a classification.json file, docume
 Write-Output ""
 $continue = Read-Host "Continue? (y/n)"
 if ($continue -notlike "y"){
-    Write-output "Response not like ''y''. Teminating script."
+    Write-output 'Response not like "y". Teminating script.'
     break
 }
 

@@ -31,9 +31,22 @@ if ($trustCert){
 
 # Installing and importing dbatools
 Write-Output ""
-Write-Output "Installing and importing dbatools to manage SQL Server instances and databases"
-install-module dbatools
-import-module dbatools
+if (Get-InstalledModule | Where-Object {$_.Name -like "dbadrgtools"}){
+    # dbatools not installed yet
+    Write-Output "dbatools not installed yet: Installing and importing module."
+    install-module dbatools
+    import-module dbatools
+}
+else {
+    # dbatools already installed
+    Write-Output "dbatools already installed: Importing module."
+    import-module dbatools
+}
+
+
+
+
+
 
 if ($trustCert){
     # Updating the dbatools configuration for this session only to trust server certificates and not encrypt connections
@@ -78,7 +91,7 @@ Restore-DbaDatabase -SqlInstance $sqlInstance -Path $backupPath -DatabaseName $s
 Write-Output ""
 Write-Output "Creating a schema-only copy of the Northwind database, with name $targetDb"
 $sql = "DBCC CLONEDATABASE ( $sourceDb , $targetDb ); ALTER DATABASE $targetDb SET READ_WRITE WITH ROLLBACK IMMEDIATE;"
-Invoke-DbaQuery -SqlInstance $sqlInstance -Query $sql
+Invoke-DbaQuery -SqlInstance $sqlInstance -Query $sql | Write-Output
 
 Write-Output ""
 Write-Output "Observe:"

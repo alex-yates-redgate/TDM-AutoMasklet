@@ -43,11 +43,6 @@ else {
     import-module dbatools
 }
 
-
-
-
-
-
 if ($trustCert){
     # Updating the dbatools configuration for this session only to trust server certificates and not encrypt connections
     #   Note: This is not best practice. For more information about a more secure way to manage encyption/certificates, see this post by Chrissy LeMaire:
@@ -65,7 +60,7 @@ Write-Warning "Downloading subsetter and anonymize CLIs not yet implemented. Ple
 # If exists, drop the source and target databases
 Write-Output ""
 Write-Output "If exists, dropping the source and target databases"
-$dbsToDelete = Get-DbaDatabase -SqlInstance localhost -Database $sourceDb,$subsetDb
+$dbsToDelete = Get-DbaDatabase -SqlInstance localhost -Database $sourceDb,$targetDb
 forEach ($db in $dbsToDelete.Name){
     Write-Output "  Dropping database $db"
     $sql = "ALTER DATABASE $db SET single_user WITH ROLLBACK IMMEDIATE; DROP DATABASE $db;"

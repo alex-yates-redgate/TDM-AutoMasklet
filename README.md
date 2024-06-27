@@ -30,6 +30,14 @@ cd TDM-AutoMasklet
 
 Note: If you do not have dbatools installed already, you will ether need to execute run-auto-masklet.ps1 as admin (the first time) so that it can install dbatools, or you will need to install dbatools separately, and then execute run-auto-masklet.ps1 afterwards.
 
+## Next steps
+After completing this worked example, I encourage you to review the following technical resources:
+- Documentation: https://documentation.red-gate.com/testdatamanager/command-line-interface-cli
+- Training: https://www.red-gate.com/hub/university/courses/test-data-management/cloning/overview/introduction-to-tdm
+Can you subset and mask one of your own databases?
+
+For more information, either contact your Redgate Account Manager, or email us at sales@red-gate.com.
+
 ## Work to do:
 - Automate the install and configuration of anonymize/subset as part of the script.
 - Move this to an official Redgate repository.

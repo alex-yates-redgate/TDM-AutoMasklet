@@ -12,7 +12,7 @@ The ojective is to give users an easy way to get started with the CLIs, to under
 You will need:
 - A Windows machine to run this script and the subsetter/anonymize CLIs on.
 - A SQL Server instance to build some sample databases on.
-- The subsetter and anonymize CLIs. (Talk to your Redgate Account Manager to get hold of these.)
+- The subsetter and anonymize CLIs. (Talk to your Redgate Account Manager to get hold of these.) MAke sure these are saved as "anonymize.exe" and "subsetter.exe" and accessable from your %PATH% environment variable.
 - The dbatools PowerShell module. The script will attempt to install it for you if you don't have it, but this requires that you run it as admin. More info about dbatools is available at dbatools.io
 
 ## Instructions

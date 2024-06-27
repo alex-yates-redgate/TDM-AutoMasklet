@@ -14,7 +14,7 @@ $trustCert = $true
 
 Write-Output "Configuration:"
 Write-Output "- sqlInstance: $sqlInstance"
-Write-Output "- databaseName: $databaseName"cd 
+Write-Output "- databaseName: $databaseName"
 Write-Output "- sourceDb: $sourceDb"
 Write-Output "- targetDb: $targetDb"  
 Write-Output "- gitRoot: $gitRoot"    

@@ -117,7 +117,9 @@ Write-Output "Observe that the $startingTable table contains only data that meet
 Write-Output "Observe that other tables, contain data required to maintain referential integrity. You can see how much data has been included from for each table by reviewing the subsetter output (above)."
 Write-Output ""
 Write-Output "Next:"
-Write-Output "We will run anonymize to create a classification.json file, documenting the location of any PII."
+Write-Output "We will run anonymize classify to create a classification.json file, documenting the location of any PII."
+Write-Output "  anonymize classify --database-engine SqlServer --connection-string $targetConnectionString --classification-file $output\classification.json --output-all-columns"
+
 Write-Output ""
 $continue = Read-Host "Continue? (y/n)"
 if ($continue -notlike "y"){
@@ -125,4 +127,63 @@ if ($continue -notlike "y"){
     break
 }
 
-Write-Warning "To do: Finish this script."
+Write-Warning "Creating a classification.json file in $output"
+anonymize classify --database-engine SqlServer --connection-string $targetConnectionString --classification-file "$output\classification.json" --output-all-columns
+
+Write-Output ""
+Write-Output "Observe:"
+Write-Output "Review the classification.json file save at: $output"
+Write-Output "This file documents any PII that has been found automatically in the $targetDb database."
+Write-Output "You can tweak this file as necessary and keep it in source control to inform future masking runs."
+Write-Output "You could even create CI builds that cross reference this file against your database source code,"
+Write-Output "  to ensure developers always add appropriate classifications for new columns before they get"
+Write-Output "  deployed to production."
+Write-Output ""
+Write-Output "Next:"
+Write-Output "We will run the anonymize map command to create a masking.json file, defining how the PII will be masked:"
+Write-Output "  anonymize map --classification-file $output\classification.json --masking-file $output\masking.json"
+
+Write-Output ""
+$continue = Read-Host "Continue? (y/n)"
+if ($continue -notlike "y"){
+    Write-output 'Response not like "y". Teminating script.'
+    break
+}
+
+anonymize map --classification-file "$output\classification.json" --masking-file "$output\masking.json"
+
+Write-Output ""
+Write-Output "Observe:"
+Write-Output "Review the masking.json file save at: $output"
+Write-Output "This file defines how the PII found in the $targetDb database will be masked."
+Write-Output "You can save this in source control, and set up an automated masking job to"
+Write-Output "  create a fresh masked copy, with the latest data, on a nightly or weekly"
+Write-Output "  basis, or at an appropriate point in your sprint/release cycle."
+Write-Output ""
+Write-Output "Next:"
+Write-Output "We will run the anonymize mask command to mask the PII in $targetDb:"
+Write-Output "  anonymize map --classification-file $output\classification.json --masking-file $output\masking.json"
+
+Write-Output ""
+$continue = Read-Host "Continue? (y/n)"
+if ($continue -notlike "y"){
+    Write-output 'Response not like "y". Teminating script.'
+    break
+}
+
+anonymize mask --database-engine SqlServer --connection-string $targetConnectionString --masking-file "$output\masking.json"
+Write-Output ""
+Write-Output "Observe:"
+Write-Output "The data in the $targetDb database should now be masked."
+Write-Output "Once you have verified that all the PII has been removed,"
+Write-Output "  you can backup this version of the database, and share"
+Write-Output "  it with your developers for dev/test purposes."
+Write-Output ""
+Write-Output "Congratulations, you've completed a minimal viable Test Data Manager proof of concept!"
+Write-Output "Next, review the following resources:"
+Write-Output "  Documentation: "
+Write-Output "  Training: "
+Write-Output "Can you subset and mask one of your own databases?"
+Write-Output ""
+Write-Output "Want to learn more? If you have a Redgate account manager, they can help you get started."
+Write-Output "Otherwise, email us and let's start a conversation: sales@red-gate.com"

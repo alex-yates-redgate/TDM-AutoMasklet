@@ -95,9 +95,11 @@ Write-Output "$sourceDb should contain some data"
 Write-Output "$targetDb should have an identical schema, but no data"
 Write-Output ""
 Write-Output "Next:"
-Write-Output "We will run subsetter to copy a subset of the data from $sourceDb to $targetDb."
+Write-Output "We will run the following subsetter command to copy a subset of the data from $sourceDb to $targetDb."
 Write-Output "The subset will include data from the $startingTable table, based on the filter clause $filterClause."
 Write-Output "It will also include any data from any other tables that are required to maintain referential integrity."
+Write-Output ""
+Write-output "  subsetter --database-engine=sqlserver --source-connection-string=$sourceConnectionString --target-connection-string=$targetConnectionString --starting-table=$startingTable --filter-clause=$filterClause"
 Write-Output ""
 $continue = Read-Host "Continue? (y/n)"
 if ($continue -notlike "y"){
@@ -119,6 +121,7 @@ Write-Output "You can see how much data has been included from for each table by
 Write-Output ""
 Write-Output "Next:"
 Write-Output "We will run anonymize classify to create a classification.json file, documenting the location of any PII:"
+Write-Output ""
 Write-Output "  anonymize classify --database-engine SqlServer --connection-string $targetConnectionString --classification-file $output\classification.json --output-all-columns"
 
 Write-Output ""
@@ -142,6 +145,7 @@ Write-Output "  deployed to production."
 Write-Output ""
 Write-Output "Next:"
 Write-Output "We will run the anonymize map command to create a masking.json file, defining how the PII will be masked:"
+Write-Output ""
 Write-Output "  anonymize map --classification-file $output\classification.json --masking-file $output\masking.json"
 
 Write-Output ""
@@ -151,6 +155,7 @@ if ($continue -notlike "y"){
     break
 }
 
+Write-Warning "Creating a masking.json file based on contents of classification.json in $output"
 anonymize map --classification-file "$output\classification.json" --masking-file "$output\masking.json"
 
 Write-Output ""
@@ -163,6 +168,7 @@ Write-Output "  basis, or at an appropriate point in your sprint/release cycle."
 Write-Output ""
 Write-Output "Next:"
 Write-Output "We will run the anonymize mask command to mask the PII in ${targetDb}:"
+Write-Output ""
 Write-Output "  anonymize map --classification-file $output\classification.json --masking-file $output\masking.json"
 
 Write-Output ""
@@ -172,10 +178,31 @@ if ($continue -notlike "y"){
     break
 }
 
+Write-Warning "Masking target database, based on contents of masking.json file in $output"
 anonymize mask --database-engine SqlServer --connection-string $targetConnectionString --masking-file "$output\masking.json"
+
 Write-Output ""
 Write-Output "Observe:"
 Write-Output "The data in the $targetDb database should now be masked."
+Write-Output "Review the data in the _FullRestore and _Subset databases. Are you happy with the way they have been subsetted and masked?"
+Write-Output "Things you may like to look out for:"
+Write-Output "  - Notes fields (e.g. Employees.Notes)"
+Write-Output "  - Dependencies (e.g. Orders.ShipAddress and Customers.Address, joined on the CustoemrID column in each table"
+Write-Output "  - Empty tables (e.g. the flyway_schema_history table)"Write-Output ""
+Write-Output ""
+Write-Output "Additional tasks:"
+Write-Output "To ensure that all the data you want/need gets included in the subset, review this documentation about using config files"
+Write-Output "  specify multiple starting tables with additional filter clauses, e.g. 'WHERE 1=1': "
+Write-Output "  https://documentation.red-gate.com/testdatamanager/command-line-interface-cli/subsetting/subsetting-configuration/subsetting-configuration-file"
+Write-Output "To apply a more thorough mask on the notes fields, review this documentation, and configure this project to a Lorem Ipsum"
+Write-Output "  masking rule for any 'notes' fields:"
+Write-Output "    - Default classifications and datasets:"
+Write-Output "        https://documentation.red-gate.com/testdatamanager/command-line-interface-cli/anonymization/default-classifications-and-datasets"
+Write-Output "    - Applying custom classification rules:"
+Write-Output "        https://documentation.red-gate.com/testdatamanager/command-line-interface-cli/anonymization/custom-configuration/classification-rules"
+Write-Output "    - Using different or custom data sets:"
+Write-Output "        https://documentation.red-gate.com/testdatamanager/command-line-interface-cli/anonymization/custom-configuration/using-different-or-custom-datasets"
+Write-Output ""
 Write-Output "Once you have verified that all the PII has been removed, you can backup this version of"
 Write-output "  the database, and share it with your developers for dev/test purposes."
 Write-Output ""

@@ -188,7 +188,7 @@ Write-Output "Review the data in the _FullRestore and _Subset databases. Are you
 Write-Output "Things you may like to look out for:"
 Write-Output "  - Notes fields (e.g. Employees.Notes)"
 Write-Output "  - Dependencies (e.g. Orders.ShipAddress and Customers.Address, joined on the CustoemrID column in each table"
-Write-Output "  - Empty tables (e.g. the flyway_schema_history table)"Write-Output ""
+Write-Output "  - Empty tables (e.g. the flyway_schema_history table)"
 Write-Output ""
 Write-Output "Additional tasks:"
 Write-Output "To ensure that all the data you want/need gets included in the subset, review this documentation about using config files"

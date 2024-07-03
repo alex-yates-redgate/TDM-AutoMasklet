@@ -34,7 +34,6 @@ Write-Output ""
 Write-Output "Initial setup:"
 
 # Installing and importing dbatools
-Write-Output ""
 if (Get-InstalledModule | Where-Object {$_.Name -like "dbatools"}){
     # dbatools already installed
     Write-Output "  dbatools PowerShell Module is installed."
@@ -62,18 +61,16 @@ if ($trustCert){
     # Updating the dbatools configuration for this session only to trust server certificates and not encrypt connections
     #   Note: This is not best practice. For more information about a more secure way to manage encyption/certificates, see this post by Chrissy LeMaire:
     #   https://blog.netnerds.net/2023/03/new-defaults-for-sql-server-connections-encryption-trust-certificate/
-    Write-Output "  Updating dbatools configuration (for this session only) to trust server certificates, and not to encrypt connections."
+    Write-Output "    Updating dbatools configuration (for this session only) to trust server certificates, and not to encrypt connections."
     Set-DbatoolsConfig -FullName sql.connection.trustcert -Value $true
     Set-DbatoolsConfig -FullName sql.connection.encrypt -Value $false
 }
 
 # Download/update subsetter and anonymize CLIs
-Write-Output ""
-Write-Output "    Ensuring the following Redgate Test Data Manager CLIs are installed and up to date: subsetter, anonymize"
+Write-Output "  Ensuring the following Redgate Test Data Manager CLIs are installed and up to date: subsetter, anonymize"
 powershell -File  $installTdmClisScript
 
 # If exists, drop the source and target databases
-Write-Output ""
 Write-Output "  If exists, dropping the source and target databases"
 $dbsToDelete = Get-DbaDatabase -SqlInstance localhost -Database $sourceDb,$targetDb
 forEach ($db in $dbsToDelete.Name){
@@ -83,16 +80,14 @@ forEach ($db in $dbsToDelete.Name){
 }
 
 # Create the fullRestore and subset databases
-Write-Output ""
 Write-Output "  Creating the fullRestore and subset databases"
 New-DbaDatabase -SqlInstance $sqlInstance -Name $sourceDb, $targetDb | Out-Null
 Write-Output "    Creating the $sourceDb database objects and data"
 Invoke-DbaQuery -SqlInstance $sqlInstance -Database $sourceDb -File $fullRestoreCreateScript | Out-Null
-Write-Output "    Creating the $targetDb database objects and data"
+Write-Output "    Creating the $targetDb database objects"
 Invoke-DbaQuery -SqlInstance $sqlInstance -Database $targetDb -File $subsetCreateScript | Out-Null
 
 # Clean output directory
-Write-Output ""
 Write-Output "  Cleaning the output directory at: $output"
 if (Test-Path $output){
     Write-Output "    Recursively deleting the existing output directory, and any files from previous runs."
@@ -136,7 +131,6 @@ Write-Output "You can see how much data has been included from for each table by
 Write-Output ""
 Write-Output "Next:"
 Write-Output "We will run anonymize classify to create a classification.json file, documenting the location of any PII:"
-Write-Output ""
 Write-Output "  anonymize classify --database-engine SqlServer --connection-string $targetConnectionString --classification-file $output\classification.json --output-all-columns"
 Write-Output "*********************************************************************************************************"
 Write-Output ""
@@ -184,8 +178,7 @@ Write-Output "  basis, or at an appropriate point in your sprint/release cycle."
 Write-Output ""
 Write-Output "Next:"
 Write-Output "We will run the anonymize mask command to mask the PII in ${targetDb}:"
-Write-Output ""
-Write-Output "  anonymize map --classification-file $output\classification.json --masking-file $output\masking.json"
+Write-Output "  anonymize mask --database-engine SqlServer --connection-string $targetConnectionString --masking-file $output\masking.json"
 Write-Output "*********************************************************************************************************"
 Write-Output ""
 $continue = Read-Host "Continue? (y/n)"
@@ -212,17 +205,17 @@ Write-Output "  specify multiple starting tables with additional filter clauses,
 Write-Output "  https://documentation.red-gate.com/testdatamanager/command-line-interface-cli/subsetting/subsetting-configuration/subsetting-configuration-file"
 Write-Output "To apply a more thorough mask on the notes fields, review this documentation, and configure this project to a Lorem Ipsum"
 Write-Output "  masking rule for any 'notes' fields:"
-Write-Output "    - Default classifications and datasets:"
-Write-Output "        https://documentation.red-gate.com/testdatamanager/command-line-interface-cli/anonymization/default-classifications-and-datasets"
-Write-Output "    - Applying custom classification rules:"
-Write-Output "        https://documentation.red-gate.com/testdatamanager/command-line-interface-cli/anonymization/custom-configuration/classification-rules"
-Write-Output "    - Using different or custom data sets:"
-Write-Output "        https://documentation.red-gate.com/testdatamanager/command-line-interface-cli/anonymization/custom-configuration/using-different-or-custom-datasets"
+Write-Output "  - Default classifications and datasets:"
+Write-Output "    https://documentation.red-gate.com/testdatamanager/command-line-interface-cli/anonymization/default-classifications-and-datasets"
+Write-Output "  - Applying custom classification rules:"
+Write-Output "    https://documentation.red-gate.com/testdatamanager/command-line-interface-cli/anonymization/custom-configuration/classification-rules"
+Write-Output "  - Using different or custom data sets:"
+Write-Output "    https://documentation.red-gate.com/testdatamanager/command-line-interface-cli/anonymization/custom-configuration/using-different-or-custom-datasets"
 Write-Output ""
 Write-Output "Once you have verified that all the PII has been removed, you can backup this version of"
 Write-output "  the database, and share it with your developers for dev/test purposes."
 Write-Output ""
-Write-Output "   *********************************   FINISHED!   *********************************"
+Write-Output "**************************************   FINISHED!   **************************************"
 Write-Output ""
 Write-Output "CONGRATULATIONS!"
 Write-Output "You've completed a minimal viable Test Data Manager proof of concept."

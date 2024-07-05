@@ -1,18 +1,21 @@
-# config
-$sqlInstance = "localhost"
-$databaseName = "Northwind"
-$sourceDb = "${databaseName}_FullRestore"
-$targetDb = "${databaseName}_Subset"
+param (
+    $sqlInstance = "localhost",
+    $databaseName = "Northwind",
+    $sourceDb = "${databaseName}_FullRestore",
+    $targetDb = "${databaseName}_Subset",
+    $startingTable = "dbo.Orders",
+    $filterClause = """OrderId < 10260""",
+    $output = "C:/temp/auto-masklet",
+    $trustCert = $true
+)
+
+# Configuration
 $gitRoot = & git rev-parse --show-toplevel
 $fullRestoreCreateScript = "$gitRoot/helper_scripts/CreateNorthwindFullRestore.sql"
 $subsetCreateScript = "$gitRoot/helper_scripts/CreateNorthwindSubset.sql"
 $installTdmClisScript = "$gitRoot/helper_scripts/installTdmClis.ps1"
-$startingTable = "dbo.Orders"
-$filterClause = """OrderId < 10260"""
-$sourceConnectionString = """server=${serverinstance};database=${sourceDb};Integrated Security=yes;TrustServerCertificate=yes"""
-$targetConnectionString = """server=${serverinstance};database=${targetDb};Integrated Security=yes;TrustServerCertificate=yes"""
-$output = "C:/temp/auto-masklet"
-$trustCert = $true
+$sourceConnectionString = """server=${sqlInstance};database=${sourceDb};Trusted_Connection=yes;TrustServerCertificate=yes"""
+$targetConnectionString = """server=${sqlInstance};database=${targetDb};Trusted_Connection=yes;TrustServerCertificate=yes"""
 
 Write-Output "Configuration:"
 Write-Output "- sqlInstance:             $sqlInstance"
@@ -68,7 +71,23 @@ if ($trustCert){
 
 # Download/update subsetter and anonymize CLIs
 Write-Output "  Ensuring the following Redgate Test Data Manager CLIs are installed and up to date: subsetter, anonymize"
-powershell -File  $installTdmClisScript
+powershell -File  $installTdmClisScript 
+
+        # Refreshing the environment variables so that the new path is available
+        $env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path","User")
+$anonymizeExe = (Get-Command anonymize).Source
+$subsetterExe = (Get-Command subsetter).Source
+if (-not $anonymizeExe){
+    Write-Warning "Warning: Failed to install anonymize."
+}
+if (-not $subsetterExe) {
+    Write-Warning "Warning: Failed to install subsetter."
+}
+
+if (-not ($anonymizeExe -and $subsetterExe)){
+    Write-Error "Error: subsetter and/or anonymize CLIs not found. This script should have installed them. Please review any errors/warnings above."
+    break
+}
 
 # If exists, drop the source and target databases
 Write-Output "  If exists, dropping the source and target databases"
@@ -105,7 +124,7 @@ Write-Output "$targetDb should have an identical schema, but no data"
 Write-Output ""
 Write-Output "Next:"
 Write-Output "We will run the following subsetter command to copy a subset of the data from $sourceDb to $targetDb."
-Write-output "  subsetter --database-engine=sqlserver --source-connection-string=$sourceConnectionString --target-connection-string=$targetConnectionString --starting-table=$startingTable --filter-clause=$filterClause"
+Write-Output "  subsetter --database-engine=sqlserver --source-connection-string=$sourceConnectionString --target-connection-string=$targetConnectionString --starting-table=$startingTable --filter-clause=$filterClause"
 Write-Output "The subset will include data from the $startingTable table, based on the filter clause $filterClause."
 Write-Output "It will also include any data from any other tables that are required to maintain referential integrity."
 Write-Output "*********************************************************************************************************"

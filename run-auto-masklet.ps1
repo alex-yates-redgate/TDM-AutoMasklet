@@ -89,6 +89,14 @@ if (-not ($anonymizeExe -and $subsetterExe)){
     break
 }
 
+# Start trial
+Write-Output "  Authorizing subsetter, and starting a trial (if not already started):"
+Write-Output "    subsetter auth --agree-to-eula --start-trial"
+subsetter auth --agree-to-eula --start-trial
+Write-Output "  Authorizing anonymize:"
+Write-Output "    anonymize auth --agree-to-eula"
+anonymize auth --agree-to-eula
+
 # If exists, drop the source and target databases
 Write-Output "  If exists, dropping the source and target databases"
 $dbsToDelete = Get-DbaDatabase -SqlInstance localhost -Database $sourceDb,$targetDb

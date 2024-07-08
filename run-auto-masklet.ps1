@@ -89,6 +89,15 @@ if (-not ($anonymizeExe -and $subsetterExe)){
     break
 }
 
+# start trial
+Write-Output "  Authorizing the TDM CLIs for a trial."
+subsetter auth --agree-to-eula --start-trial
+$continue = Read-Host "Continue? (y/n)"
+if ($continue -notlike "y"){
+    Write-output 'Response not like "y". Teminating script.'
+    break
+}
+
 # If exists, drop the source and target databases
 Write-Output "  If exists, dropping the source and target databases"
 $dbsToDelete = Get-DbaDatabase -SqlInstance localhost -Database $sourceDb,$targetDb

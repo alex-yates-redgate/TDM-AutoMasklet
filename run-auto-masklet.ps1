@@ -92,6 +92,7 @@ if (-not ($anonymizeExe -and $subsetterExe)){
 # start trial
 Write-Output "  Authorizing the TDM CLIs for a trial."
 subsetter auth --agree-to-eula --start-trial
+anonymize auth --agree-to-eula
 $continue = Read-Host "Continue? (y/n)"
 if ($continue -notlike "y"){
     Write-output 'Response not like "y". Teminating script.'

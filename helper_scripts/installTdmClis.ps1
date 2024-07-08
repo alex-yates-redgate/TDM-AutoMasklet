@@ -233,15 +233,3 @@ if ($installAnonymize){
         break
     }
 }
-
-if ($installAnonymize -or $installSubsetter){
-    Write-Output "     Installation complete."
-    Write-Warning "********************************************************************************************************"
-    Write-Warning "                                             WARNING! "
-    Write-Warning "    You may need to EITHER activate your licence OR start a free trial before continuing!"
-    Write-Warning "    To start a free trial of Redgate Test Data Manager, open a new terminal window and run:"
-    Write-Warning "      subsetter auth --agree-to-eula --start-trial"
-    Write-Warning "    For more information about licensing/activating your software:"
-    Write-Warning "      https://documentation.red-gate.com/testdatamanager/getting-started/licensing/activating-your-license"    
-    Write-Warning "********************************************************************************************************"
-}

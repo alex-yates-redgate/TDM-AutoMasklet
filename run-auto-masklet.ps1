@@ -89,15 +89,13 @@ if (-not ($anonymizeExe -and $subsetterExe)){
     break
 }
 
-# start trial
-Write-Output "  Authorizing the TDM CLIs for a trial."
+# Start trial
+Write-Output "  Authorizing subsetter, and starting a trial (if not already started):"
+Write-Output "    subsetter auth --agree-to-eula --start-trial"
 subsetter auth --agree-to-eula --start-trial
+Write-Output "  Authorizing anonymize:"
+Write-Output "    anonymize auth --agree-to-eula"
 anonymize auth --agree-to-eula
-$continue = Read-Host "Continue? (y/n)"
-if ($continue -notlike "y"){
-    Write-output 'Response not like "y". Teminating script.'
-    break
-}
 
 # If exists, drop the source and target databases
 Write-Output "  If exists, dropping the source and target databases"

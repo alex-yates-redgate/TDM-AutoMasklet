@@ -1,15 +1,15 @@
 param (
     $sqlInstance = "localhost",
     $databaseName = "Northwind",
-    $sourceDb = "${databaseName}_FullRestore",
-    $targetDb = "${databaseName}_Subset",
-    $startingTable = "dbo.Orders",
-    $filterClause = """OrderId < 10260""",
+    $startingTable = """dbo.Orders""",
+    $filterClause = "OrderId < 10260",
     $output = "C:/temp/auto-masklet",
     $trustCert = $true
 )
 
 # Configuration
+$sourceDb = "${databaseName}_FullRestore"
+$targetDb = "${databaseName}_Subset"
 $gitRoot = & git rev-parse --show-toplevel
 $fullRestoreCreateScript = "$gitRoot/helper_scripts/CreateNorthwindFullRestore.sql"
 $subsetCreateScript = "$gitRoot/helper_scripts/CreateNorthwindSubset.sql"
@@ -32,7 +32,6 @@ Write-Output "- sourceConnectionString:  $sourceConnectionString"
 Write-Output "- targetConnectionString:  $targetConnectionString"
 Write-Output "- output:                  $output"
 Write-Output "- trustCert:               $trustCert"
-
 Write-Output ""
 Write-Output "Initial setup:"
 
@@ -129,6 +128,24 @@ Write-Output "Observe:"
 Write-Output "There should now be two databases on the $sqlInstance server: $sourceDb and $targetDb"
 Write-Output "$sourceDb should contain some data"
 Write-Output "$targetDb should have an identical schema, but no data"
+Write-Output ""
+Write-Output "For example, you could run the following script in your prefered IDE:"
+Write-Output ""
+Write-Output "  USE $sourceDb"
+Write-Output "  --USE $targetDb -- Uncomment to run the same query on the target database"
+Write-Output "  "
+Write-Output "  SELECT COUNT (*) AS TotalOrders"
+Write-Output "  FROM   dbo.Orders;"
+Write-Output "  "
+Write-Output "  SELECT   TOP 20 o.OrderID AS 'o.OrderId' ,"
+Write-Output "                  o.CustomerID AS 'o.CustomerID' ,"
+Write-Output "                  o.ShipAddress AS 'o.ShipAddress' ,"
+Write-Output "                  o.ShipCity AS 'o.ShipCity' ,"
+Write-Output "                  c.Address AS 'c.ShipCity' ,"
+Write-Output "                  c.City AS 'c.ShipCity'"
+Write-Output "  FROM     dbo.Customers c"
+Write-Output "           JOIN dbo.Orders o ON o.CustomerID = c.CustomerID"
+Write-Output "  ORDER BY o.OrderID ASC;"
 Write-Output ""
 Write-Output "Next:"
 Write-Output "We will run the following subsetter command to copy a subset of the data from $sourceDb to $targetDb."

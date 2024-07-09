@@ -30,8 +30,9 @@ cd TDM-AutoMasklet
 ```
 
 _Notes about the script:_
-- _If you do not have dbatools installed already, you will ether need to execute run-auto-masklet.ps1 as admin (the first time) so that it can install dbatools, or you will need to install dbatools separately, and then execute run-auto-masklet.ps1 afterwards._
+- _If you do not have dbatools or anonymize/subser installed already, you will ether need to execute run-auto-masklet.ps1 as admin (the first time) so that it can install dbatools, or you will need to install dbatools separately, and then execute run-auto-masklet.ps1 afterwards._
 - _When downloading and installing new software (initial runs and following software updates), the script will need a few minutes at the start to download and install everything. Subsequent runs will be much, much faster!_
+- _Following installl, the script will attempt to authenticate anonymize and subset, this will open up a Redgate log-in page in your default web browser. You will need to log in for the script to continue._
 
 ## Next steps
 After completing this worked example, I encourage you to review the following technical resources:

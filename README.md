@@ -24,7 +24,7 @@ git clone https://github.com/alex-yates-redgate/TDM-AutoMasklet.git
 cd TDM-AutoMasklet
 ```
 4. Review the file .\run-auto-masklet.ps1. In particular, pay attention to the config section at the top. This section assumes your SQL Instance is running on localhost, and that you would like to output your files to C:/temp/auto-masklet. If you would like to use a different SQL Instance or output directory, update as appropriate.
-5. Run the script, and follow the instructions. It will download, configure, and start a new trial for the TDM CLIs. Pay particular attention to each of the "Observe" and "Next" blocks, before continuing to the next stage:
+5. Run the script, and follow the instructions. It will download, configure, and start a new trial for the TDM CLIs. Pay particular attention to each of the "Observe" and "Next" blocks, before continuing to the next stage. _(Note: upon first run, and following software updates, the script will take a few minutes to download and install everything. Subsequent runs will be much, much faster!)_:
 ```
 .\run-auto-masklet.ps1
 ```

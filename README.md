@@ -62,3 +62,4 @@ For more information, either contact your Redgate Account Manager, or email us a
 
 ## Work to do:
 - Move this to an official Redgate repository.
+- Remove dependency on Git

@@ -1,5 +1,9 @@
 # TDM-AutoMasklet
-A Test Data Manager subsetting and anonymization worked example
+A Test Data Manager subsetting and anonymization worked example.
+
+You can read more about this project in [a blog post by Steve Jones, available here](https://voiceofthedba.com/2024/07/10/up-and-running-quickly-with-test-data-manager/), and you can watch a 10 minute video about it here:
+
+[![Steve Jones: Run Your Own Test Data Manager PoC in under 10 Minutes](https://img.youtube.com/vi/d-dlbVqU4R8/0.jpg)](https://www.youtube.com/watch?v=d-dlbVqU4R8)
 
 ## Purpose
 This project exists as a minimal viable proof of concept for the subsetter and anonymize CLIs that come with Redgate Test Data Manager.

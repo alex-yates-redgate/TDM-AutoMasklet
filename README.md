@@ -10,7 +10,7 @@ This project exists as a minimal viable proof of concept for the subsetter and a
 
 The run-auto-masklet.ps1 powershell script walks you through the steps required to subset and mask the PII in a sample database.
 
-The ojective is to give users an easy way to get started with the CLIs, to understand their usage.
+The ojective is to give users an easy way to get started with the CLIs, and to understand their usage.
 
 ## System set up
 You will need:

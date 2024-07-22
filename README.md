@@ -15,7 +15,6 @@ The ojective is to give users an easy way to get started with the CLIs, and to u
 ## System set up
 You will need:
 - A Windows machine to run this script and the subsetter/anonymize CLIs on. (May also work on Linux, but not tested.)
-- [Git](https://git-scm.com/) installed on your Windows machine.
 - A SQL Server instance to build some sample databases on.
 - If these files are downloaded as a zip file, the [PowerShell Execution Policy](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_execution_policies?view=powershell-7.4) must be set to ByPass, or Unrestricted. If these files are cloned into a git repository, the PowerShell Execution Policy must be set to ByPass, Unrestricted, or RemoteSigned. (RemoteSigned is the default on Windows Servers). To manage your execution policy run the following PowerShell commands:
 
@@ -31,17 +30,16 @@ Set-ExecutionPolicy RemoteSigned
 ```
 
 ## Instructions
-1. Open a PowerShell command prompt.
-2. Clone the repo:
+1. Get the code. EITHER download the code a s a zip file, OR open a PowerShell command prompt and use git to clone the repo:
 ```
 git clone https://github.com/alex-yates-redgate/TDM-AutoMasklet.git
 ```
-3. Navigate into the directory (this is important):
+2. Navigate into the directory (this is important):
 ```
 cd TDM-AutoMasklet
 ```
-4. Review the file .\run-auto-masklet.ps1. In particular, pay attention to the config section at the top. This section assumes your SQL Instance is running on localhost, and that you would like to output your files to C:/temp/auto-masklet. If you would like to use a different SQL Instance or output directory, update as appropriate.
-5. Run the script, and follow the instructions. It will download, configure, and start a new trial for the TDM CLIs. Pay particular attention to each of the "Observe" and "Next" blocks, before continuing to the next stage:
+3. Review the file .\run-auto-masklet.ps1. In particular, pay attention to the "param" (parameters) section at the top. This section assumes your SQL Instance is running on localhost, and that you would like to output your files to C:/temp/auto-masklet. If you would like to use a different SQL Instance or output directory, update the config as appropriate.
+4. Run the script, and follow the instructions. It will download, configure, and start a new trial for the TDM CLIs. Pay particular attention to each of the "Observe" and "Next" blocks, before continuing to the next stage:
 ```
 .\run-auto-masklet.ps1
 ```

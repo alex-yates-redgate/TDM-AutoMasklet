@@ -30,7 +30,7 @@ Set-ExecutionPolicy RemoteSigned
 ```
 
 ## Instructions
-1. Get the code. EITHER download the code a s a zip file, OR open a PowerShell command prompt and use git to clone the repo:
+1. Get the code. EITHER download the code as a zip file, OR open a PowerShell command prompt and use git to clone the repo ([requires git](https://git-scm.com/)):
 ```
 git clone https://github.com/alex-yates-redgate/TDM-AutoMasklet.git
 ```

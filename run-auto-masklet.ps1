@@ -2,7 +2,7 @@ param (
     $sqlInstance = "localhost",
     $databaseName = "Northwind",
     $startingTable = """dbo.Orders""",
-    $filterClause = "OrderId < 10260",
+    $filterClause = """OrderId < 10260""",
     $output = "C:/temp/auto-masklet",
     $trustCert = $true
 )

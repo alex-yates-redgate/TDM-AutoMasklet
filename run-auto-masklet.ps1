@@ -33,6 +33,9 @@ Write-Output "- trustCert:               $trustCert"
 Write-Output ""
 Write-Output "Initial setup:"
 
+# Unblocking all files in thi repo (typically required if code is downloaded as zip)
+Get-ChildItem -Path $PSScriptRoot -Recurse | Unblock-File
+
 # Installing and importing dbatools
 if (Get-InstalledModule | Where-Object {$_.Name -like "dbatools"}){
     # dbatools already installed
@@ -70,8 +73,10 @@ if ($trustCert){
 Write-Output "  Ensuring the following Redgate Test Data Manager CLIs are installed and up to date: subsetter, anonymize"
 powershell -File  $installTdmClisScript 
 
-        # Refreshing the environment variables so that the new path is available
-        $env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path","User")
+# Refreshing the environment variables so that the new path is available
+$env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path","User")
+
+# Verifying that the CLIs are both available
 $anonymizeExe = (Get-Command anonymize).Source
 $subsetterExe = (Get-Command subsetter).Source
 if (-not $anonymizeExe){
@@ -96,7 +101,7 @@ anonymize auth --agree-to-eula
 
 # If exists, drop the source and target databases
 Write-Output "  If exists, dropping the source and target databases"
-$dbsToDelete = Get-DbaDatabase -SqlInstance localhost -Database $sourceDb,$targetDb
+$dbsToDelete = Get-DbaDatabase -SqlInstance $sqlInstance -Database $sourceDb,$targetDb
 forEach ($db in $dbsToDelete.Name){
     Write-Output "    Dropping database $db"
     $sql = "ALTER DATABASE $db SET single_user WITH ROLLBACK IMMEDIATE; DROP DATABASE $db;"

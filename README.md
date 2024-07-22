@@ -31,13 +31,13 @@ Set-ExecutionPolicy RemoteSigned
 
 ## Instructions
 1. Get the code either by cloning the repo (prefered), or by downloding and extracting the zip file (if it is not practical to use git to clone the repo):
-  - To clone the repo:
-    Ensure ([git is installed](https://git-scm.com/)). Then open a PowerShell command prompt and run the following command: 
+  1a. To clone the repo:
+  Ensure ([git is installed](https://git-scm.com/)). Then open a PowerShell command prompt and run the following command: 
 ```
 git clone https://github.com/alex-yates-redgate/TDM-AutoMasklet.git
 ```
-  - To download the code as a zip file:
-    Clicking the green "<> Code" button above, and select "Download ZIP". Then extract the zip file as you see fit. Finally, review the note under System Setup (above) about PowerShell Execution Policies, and ensure the PowerShell Execution Policy on your machine is appropriately configured.
+  1b. To download the code as a zip file:
+  Clicking the green "<> Code" button above, and select "Download ZIP". Then extract the zip file as you see fit. Finally, review the note under System Setup (above) about PowerShell Execution Policies, and ensure the PowerShell Execution Policy on your machine is appropriately configured.
 2. Review the file .\run-auto-masklet.ps1. In particular, pay attention to the "param" (parameters) section at the top. This section assumes your SQL Instance is running on localhost, and that you would like to output your files to C:/temp/auto-masklet. (This directory will be cleaned and recreated each time you run the script). If you would like to use a different SQL Instance or output directory, update the config as appropriate.
 3. Navigate to the directory you copied the code to, and then run the script in a PowerShell window. The script will download, configure, and start a new trial for the TDM CLIs. Note, during licence/trial activation, a web browser may open, and you may be required to log into the Redgate licencing portal.
 ```

@@ -8,7 +8,7 @@ You can read more about this project in [a blog post by Steve Jones, available h
 ## Purpose
 This project exists as a minimal viable proof of concept for the subsetter and anonymize CLIs that come with Redgate Test Data Manager.
 
-The run-auto-masklet.ps1 powershell script steps you through a few the steps required to subset and mask the PII in a sample database.
+The run-auto-masklet.ps1 powershell script walks you through the steps required to subset and mask the PII in a sample database.
 
 The ojective is to give users an easy way to get started with the CLIs, to understand their usage.
 

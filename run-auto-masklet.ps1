@@ -10,10 +10,9 @@ param (
 # Configuration
 $sourceDb = "${databaseName}_FullRestore"
 $targetDb = "${databaseName}_Subset"
-$gitRoot = & git rev-parse --show-toplevel
-$fullRestoreCreateScript = "$gitRoot/helper_scripts/CreateNorthwindFullRestore.sql"
-$subsetCreateScript = "$gitRoot/helper_scripts/CreateNorthwindSubset.sql"
-$installTdmClisScript = "$gitRoot/helper_scripts/installTdmClis.ps1"
+$fullRestoreCreateScript = "$PSScriptRoot\helper_scripts\CreateNorthwindFullRestore.sql"
+$subsetCreateScript = "$PSScriptRoot\helper_scripts\CreateNorthwindSubset.sql"
+$installTdmClisScript = "$PSScriptRoot\helper_scripts\installTdmClis.ps1"
 $sourceConnectionString = """server=${sqlInstance};database=${sourceDb};Trusted_Connection=yes;TrustServerCertificate=yes"""
 $targetConnectionString = """server=${sqlInstance};database=${targetDb};Trusted_Connection=yes;TrustServerCertificate=yes"""
 
@@ -22,7 +21,6 @@ Write-Output "- sqlInstance:             $sqlInstance"
 Write-Output "- databaseName:            $databaseName"
 Write-Output "- sourceDb:                $sourceDb"
 Write-Output "- targetDb:                $targetDb"  
-Write-Output "- gitRoot:                 $gitRoot" 
 Write-Output "- fullRestoreCreateScript: $fullRestoreCreateScript"
 Write-Output "- subsetCreateScript:      $subsetCreateScript"
 Write-Output "- installTdmClisScript:    $installTdmClisScript"

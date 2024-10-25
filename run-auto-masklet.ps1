@@ -173,7 +173,7 @@ Write-Output "******************************************************************
 Write-Output "Observe:"
 Write-Output "$targetDb should contain some data."
 Write-Output "Observe that the $startingTable table contains only data that meets the filter clause $filterClause."
-Write-Output "Observe that other tables, contain data required to maintain referential integrity."
+Write-Output "Observe that other tables contain data required to maintain referential integrity."
 Write-Output "You can see how much data has been included from for each table by reviewing the subsetter output (above)."
 Write-Output ""
 Write-Output "Next:"

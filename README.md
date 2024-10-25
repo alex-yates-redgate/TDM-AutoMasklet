@@ -6,7 +6,7 @@ You can read more about this project in [a blog post by Steve Jones, available h
 [![Steve Jones: Run Your Own Test Data Manager PoC in under 10 Minutes](https://img.youtube.com/vi/d-dlbVqU4R8/0.jpg)](https://www.youtube.com/watch?v=d-dlbVqU4R8)
 
 ## Purpose
-This project exists as a minimal viable proof of concept for the subsetter and anonymize CLIs that come with Redgate Test Data Manager.
+This project exists as a minimal viable proof of concept for the rgsubsetter and rganonymize CLIs that come with Redgate Test Data Manager.
 
 The run-auto-masklet.ps1 powershell script walks you through the steps required to subset and mask the PII in a sample database.
 
@@ -14,7 +14,7 @@ The ojective is to give users an easy way to get started with the CLIs, and to u
 
 ## System set up
 You will need:
-- A Windows machine to run this script and the subsetter/anonymize CLIs on. (May also work on Linux, but not tested.)
+- A Windows machine to run this script and the rgsubsetter/rganonymize CLIs on. (May also work on Linux, but not tested.)
 - A SQL Server instance to build some sample databases on.
 - If these files are downloaded as a zip file, the [PowerShell Execution Policy](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_execution_policies?view=powershell-7.4) must be set to ByPass, or Unrestricted. If these files are cloned into a git repository, the PowerShell Execution Policy must be set to ByPass, Unrestricted, or RemoteSigned. (RemoteSigned is the default on Windows Servers). To manage your execution policy run the following PowerShell commands:
 
@@ -45,7 +45,7 @@ cd TDM-AutoMasklet      # Navigate to the directory you cloned the repo to/extra
 4. The script will create a couple of sample databases for you (by default, Northwind_FullRestore and Northwind_Subset). If these databases already exist, they will be dropped and recreated. The script will then pause and walk you through each of the major steps requiredd to subset and anonymize a database. Follow the instructions, and pay particular attention to each of the "Observe" and "Next" blocks, before continuing to the next stage.
 
 _Notes about the script:_
-- _If you do not have dbatools or anonymize/subsetter installed already, you will need to execute run-auto-masklet.ps1 as admin (the first time) to perform the download/install._
+- _If you do not have dbatools or rganonymize/rgsubsetter installed already, you will need to execute run-auto-masklet.ps1 as admin (the first time) to perform the download/install._
 - _When downloading and installing new software (initial runs and following software updates), the script will need a few minutes at the start to download and install everything. Subsequent runs will be much, much faster!_
 
 ## Next steps

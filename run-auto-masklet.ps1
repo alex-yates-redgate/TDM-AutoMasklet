@@ -69,35 +69,35 @@ if ($trustCert){
     Set-DbatoolsConfig -FullName sql.connection.encrypt -Value $false
 }
 
-# Download/update subsetter and anonymize CLIs
-Write-Output "  Ensuring the following Redgate Test Data Manager CLIs are installed and up to date: subsetter, anonymize"
+# Download/update rgsubset and rganonymize CLIs
+Write-Output "  Ensuring the following Redgate Test Data Manager CLIs are installed and up to date: rgsubset, rganonymize"
 powershell -File  $installTdmClisScript 
 
 # Refreshing the environment variables so that the new path is available
 $env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path","User")
 
 # Verifying that the CLIs are both available
-$anonymizeExe = (Get-Command anonymize).Source
-$subsetterExe = (Get-Command subsetter).Source
-if (-not $anonymizeExe){
-    Write-Warning "Warning: Failed to install anonymize."
+$rganonymizeExe = (Get-Command rganonymize).Source
+$rgsubsetExe = (Get-Command rgsubset).Source
+if (-not $rganonymizeExe){
+    Write-Warning "Warning: Failed to install rganonymize."
 }
-if (-not $subsetterExe) {
-    Write-Warning "Warning: Failed to install subsetter."
+if (-not $rgsubsetExe) {
+    Write-Warning "Warning: Failed to install rgsubset."
 }
 
-if (-not ($anonymizeExe -and $subsetterExe)){
-    Write-Error "Error: subsetter and/or anonymize CLIs not found. This script should have installed them. Please review any errors/warnings above."
+if (-not ($rganonymizeExe -and $rgsubsetExe)){
+    Write-Error "Error: rgsubset and/or rganonymize CLIs not found. This script should have installed them. Please review any errors/warnings above."
     break
 }
 
 # Start trial
-Write-Output "  Authorizing subsetter, and starting a trial (if not already started):"
-Write-Output "    subsetter auth --agree-to-eula --start-trial"
-subsetter auth --agree-to-eula --start-trial
-Write-Output "  Authorizing anonymize:"
-Write-Output "    anonymize auth --agree-to-eula"
-anonymize auth --agree-to-eula
+Write-Output "  Authorizing rgsubset, and starting a trial (if not already started):"
+Write-Output "    rgsubset auth --agree-to-eula --start-trial"
+rgsubset auth --agree-to-eula --start-trial
+Write-Output "  Authorizing rganonymize:"
+Write-Output "    rganonymize auth --agree-to-eula"
+rganonymize auth --agree-to-eula
 
 # If exists, drop the source and target databases
 Write-Output "  If exists, dropping the source and target databases"
@@ -151,8 +151,8 @@ Write-Output "           JOIN dbo.Orders o ON o.CustomerID = c.CustomerID"
 Write-Output "  ORDER BY o.OrderID ASC;"
 Write-Output ""
 Write-Output "Next:"
-Write-Output "We will run the following subsetter command to copy a subset of the data from $sourceDb to $targetDb."
-Write-Output "  subsetter --database-engine=sqlserver --source-connection-string=$sourceConnectionString --target-connection-string=$targetConnectionString --starting-table=$startingTable --filter-clause=$filterClause"
+Write-Output "We will run the following rgsubset command to copy a subset of the data from $sourceDb to $targetDb."
+Write-Output "  rgsubset --database-engine=sqlserver --source-connection-string=$sourceConnectionString --target-connection-string=$targetConnectionString --starting-table=$startingTable --filter-clause=$filterClause"
 Write-Output "The subset will include data from the $startingTable table, based on the filter clause $filterClause."
 Write-Output "It will also include any data from any other tables that are required to maintain referential integrity."
 Write-Output "*********************************************************************************************************"
@@ -165,8 +165,8 @@ if ($continue -notlike "y"){
 
 # running subset
 Write-Output ""
-Write-Output "Running subsetter to copy a subset of the data from $sourceDb to $targetDb."
-subsetter --database-engine=sqlserver --source-connection-string=$sourceConnectionString --target-connection-string=$targetConnectionString --starting-table=$startingTable --filter-clause=$filterClause
+Write-Output "Running rgsubset to copy a subset of the data from $sourceDb to $targetDb."
+rgsubset --database-engine=sqlserver --source-connection-string=$sourceConnectionString --target-connection-string=$targetConnectionString --starting-table=$startingTable --filter-clause=$filterClause
 
 Write-Output ""
 Write-Output "*********************************************************************************************************"
@@ -174,11 +174,11 @@ Write-Output "Observe:"
 Write-Output "$targetDb should contain some data."
 Write-Output "Observe that the $startingTable table contains only data that meets the filter clause $filterClause."
 Write-Output "Observe that other tables contain data required to maintain referential integrity."
-Write-Output "You can see how much data has been included from for each table by reviewing the subsetter output (above)."
+Write-Output "You can see how much data has been included from for each table by reviewing the rgsubset output (above)."
 Write-Output ""
 Write-Output "Next:"
-Write-Output "We will run anonymize classify to create a classification.json file, documenting the location of any PII:"
-Write-Output "  anonymize classify --database-engine SqlServer --connection-string $targetConnectionString --classification-file $output\classification.json --output-all-columns"
+Write-Output "We will run rganonymize classify to create a classification.json file, documenting the location of any PII:"
+Write-Output "  rganonymize classify --database-engine SqlServer --connection-string $targetConnectionString --classification-file $output\classification.json --output-all-columns"
 Write-Output "*********************************************************************************************************"
 Write-Output ""
 $continue = Read-Host "Continue? (y/n)"
@@ -188,7 +188,7 @@ if ($continue -notlike "y"){
 }
 
 Write-Output "Creating a classification.json file in $output"
-anonymize classify --database-engine SqlServer --connection-string $targetConnectionString --classification-file "$output\classification.json" --output-all-columns
+rganonymize classify --database-engine SqlServer --connection-string $targetConnectionString --classification-file "$output\classification.json" --output-all-columns
 
 Write-Output ""
 Write-Output "*********************************************************************************************************"
@@ -201,8 +201,8 @@ Write-Output "  to ensure developers always add appropriate classifications for 
 Write-Output "  deployed to production."
 Write-Output ""
 Write-Output "Next:"
-Write-Output "We will run the anonymize map command to create a masking.json file, defining how the PII will be masked:"
-Write-Output "  anonymize map --classification-file $output\classification.json --masking-file $output\masking.json"
+Write-Output "We will run the rganonymize map command to create a masking.json file, defining how the PII will be masked:"
+Write-Output "  rganonymize map --classification-file $output\classification.json --masking-file $output\masking.json"
 Write-Output "*********************************************************************************************************"
 Write-Output ""
 $continue = Read-Host "Continue? (y/n)"
@@ -212,7 +212,7 @@ if ($continue -notlike "y"){
 }
 
 Write-Output "Creating a masking.json file based on contents of classification.json in $output"
-anonymize map --classification-file "$output\classification.json" --masking-file "$output\masking.json"
+rganonymize map --classification-file "$output\classification.json" --masking-file "$output\masking.json"
 
 Write-Output ""
 Write-Output "*********************************************************************************************************"
@@ -224,8 +224,8 @@ Write-Output "  create a fresh masked copy, with the latest data, on a nightly o
 Write-Output "  basis, or at an appropriate point in your sprint/release cycle."
 Write-Output ""
 Write-Output "Next:"
-Write-Output "We will run the anonymize mask command to mask the PII in ${targetDb}:"
-Write-Output "  anonymize mask --database-engine SqlServer --connection-string $targetConnectionString --masking-file $output\masking.json"
+Write-Output "We will run the rganonymize mask command to mask the PII in ${targetDb}:"
+Write-Output "  rganonymize mask --database-engine SqlServer --connection-string $targetConnectionString --masking-file $output\masking.json"
 Write-Output "*********************************************************************************************************"
 Write-Output ""
 $continue = Read-Host "Continue? (y/n)"
@@ -234,7 +234,7 @@ if ($continue -notlike "y"){
     break
 }
 Write-Output "Masking target database, based on contents of masking.json file in $output"
-anonymize mask --database-engine SqlServer --connection-string $targetConnectionString --masking-file "$output\masking.json"
+rganonymize mask --database-engine SqlServer --connection-string $targetConnectionString --masking-file "$output\masking.json"
 
 Write-Output ""
 Write-Output "*********************************************************************************************************"

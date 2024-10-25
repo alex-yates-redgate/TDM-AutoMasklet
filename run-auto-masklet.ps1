@@ -166,7 +166,7 @@ if ($continue -notlike "y"){
 # running subset
 Write-Output ""
 Write-Output "Running rgsubset to copy a subset of the data from $sourceDb to $targetDb."
-rgsubset run --database-engine=sqlserver --source-connection-string=$sourceConnectionString --target-connection-string=$targetConnectionString --options-file ".\helper_scripts\rgsubset-options.json"
+rgsubset run --database-engine=sqlserver --source-connection-string=$sourceConnectionString --target-connection-string=$targetConnectionString --options-file ".\helper_scripts\rgsubset-options.json" 2>&1 | %{ "$_" }
 
 Write-Output ""
 Write-Output "*********************************************************************************************************"
@@ -188,7 +188,7 @@ if ($continue -notlike "y"){
 }
 
 Write-Output "Creating a classification.json file in $output"
-rganonymize classify --database-engine SqlServer --connection-string $targetConnectionString --classification-file "$output\classification.json" --output-all-columns
+rganonymize classify --database-engine SqlServer --connection-string $targetConnectionString --classification-file "$output\classification.json" --output-all-columns 2>&1 | %{ "$_" }
 
 Write-Output ""
 Write-Output "*********************************************************************************************************"
@@ -212,7 +212,7 @@ if ($continue -notlike "y"){
 }
 
 Write-Output "Creating a masking.json file based on contents of classification.json in $output"
-rganonymize map --classification-file "$output\classification.json" --masking-file "$output\masking.json"
+rganonymize map --classification-file "$output\classification.json" --masking-file "$output\masking.json" 2>&1 | %{ "$_" }
 
 Write-Output ""
 Write-Output "*********************************************************************************************************"
@@ -234,7 +234,7 @@ if ($continue -notlike "y"){
     break
 }
 Write-Output "Masking target database, based on contents of masking.json file in $output"
-rganonymize mask --database-engine SqlServer --connection-string $targetConnectionString --masking-file "$output\masking.json"
+rganonymize mask --database-engine SqlServer --connection-string $targetConnectionString --masking-file "$output\masking.json" 2>&1 | %{ "$_" }
 
 Write-Output ""
 Write-Output "*********************************************************************************************************"

@@ -40,7 +40,7 @@ Function Test-LatestVersion {
     param (
         [Parameter(Position=0,mandatory=$true)][ValidateSet("rganonymize","rgsubset")][string]$cli
     )
-    # Reading XML blocks detailing the latest versions of rggenerate, rgsubset and rganonymize
+    # Reading XML blocks detailing the latest versions of rgsubset and rganonymize
     switch ($cli){
         "rganonymize" {$latestVersionXml = "https://redgate-download.s3.eu-west-1.amazonaws.com/?delimiter=/&prefix=EAP/AnonymizeWin64/"}
         "rgsubset" {$latestVersionXml = "https://redgate-download.s3.eu-west-1.amazonaws.com/?delimiter=/&prefix=EAP/SubsetterWin64/"}
@@ -58,7 +58,7 @@ Function Get-ExistingCliLocation {
     param (
         [Parameter(Position=0,mandatory=$true)][ValidateSet("rganonymize","rgsubset")][string]$cli
     )
-    $cliExe = (Get-Command $cli).Source
+    $cliExe = (Get-Command $cli -ErrorAction SilentlyContinue).Source
     if ($cliExe){
         $cliLocation = Split-Path -parent $cliExe
         return $cliLocation

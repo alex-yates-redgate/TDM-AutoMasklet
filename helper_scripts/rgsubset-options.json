@@ -1,9 +1,12 @@
 {
-    "startingTables": [
-      { 
+  "startingTables": [
+    { 
+      "table":
+      {
         "schema": "dbo",
         "name": "Orders"
       },
       "filterClause": "OrderId < 10260"
-    ]
+    }
+  ]
 }

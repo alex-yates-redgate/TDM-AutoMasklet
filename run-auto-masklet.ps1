@@ -1,8 +1,8 @@
 param (
     $sqlInstance = "localhost",
     $databaseName = "Northwind",
-    $startingTable = """dbo.Orders""",
-    $filterClause = """OrderId < 10260""",
+    $startingTable = "dbo.Orders",
+    $filterClause = "OrderId < 10260",
     $output = "C:/temp/auto-masklet",
     $trustCert = $true
 )
@@ -10,11 +10,11 @@ param (
 # Configuration
 $sourceDb = "${databaseName}_FullRestore"
 $targetDb = "${databaseName}_Subset"
-$fullRestoreCreateScript = "$PSScriptRoot\helper_scripts\CreateNorthwindFullRestore.sql"
-$subsetCreateScript = "$PSScriptRoot\helper_scripts\CreateNorthwindSubset.sql"
-$installTdmClisScript = "$PSScriptRoot\helper_scripts\installTdmClis.ps1"
-$sourceConnectionString = """server=${sqlInstance};database=${sourceDb};Trusted_Connection=yes;TrustServerCertificate=yes"""
-$targetConnectionString = """server=${sqlInstance};database=${targetDb};Trusted_Connection=yes;TrustServerCertificate=yes"""
+$fullRestoreCreateScript = "$PSScriptRoot/helper_scripts/CreateNorthwindFullRestore.sql"
+$subsetCreateScript = "$PSScriptRoot/helper_scripts/CreateNorthwindSubset.sql"
+$installTdmClisScript = "$PSScriptRoot/helper_scripts/installTdmClis.ps1"
+$sourceConnectionString = "server=$sqlInstance;database=$sourceDb;Trusted_Connection=yes;TrustServerCertificate=yes"
+$targetConnectionString = "server=$sqlInstance;database=$targetDb;Trusted_Connection=yes;TrustServerCertificate=yes"
 
 Write-Output "Configuration:"
 Write-Output "- sqlInstance:             $sqlInstance"
@@ -152,7 +152,7 @@ Write-Output "  ORDER BY o.OrderID ASC;"
 Write-Output ""
 Write-Output "Next:"
 Write-Output "We will run the following rgsubset command to copy a subset of the data from $sourceDb to $targetDb."
-Write-Output "  rgsubset run --database-engine=sqlserver --source-connection-string=$sourceConnectionString --target-connection-string=$targetConnectionString --options-file .\helper_scripts\rgsubset-options.json"
+Write-Output "  rgsubset run --database-engine=sqlserver --source-connection-string=$sourceConnectionString --target-connection-string=$targetConnectionString --options-file .\helper_scripts\rgsubset-options.json --target-database-write-mode Overwrite"
 Write-Output "The subset will include data from the $startingTable table, based on the filter clause $filterClause."
 Write-Output "It will also include any data from any other tables that are required to maintain referential integrity."
 Write-Output "*********************************************************************************************************"
@@ -166,7 +166,7 @@ if ($continue -notlike "y"){
 # running subset
 Write-Output ""
 Write-Output "Running rgsubset to copy a subset of the data from $sourceDb to $targetDb."
-rgsubset run --database-engine=sqlserver --source-connection-string=$sourceConnectionString --target-connection-string=$targetConnectionString --options-file ".\helper_scripts\rgsubset-options.json" 2>&1 | %{ "$_" }
+rgsubset run --database-engine=sqlserver --source-connection-string="$sourceConnectionString" --target-connection-string="$targetConnectionString" --options-file ".\helper_scripts\rgsubset-options.json" --target-database-write-mode Overwrite
 
 Write-Output ""
 Write-Output "*********************************************************************************************************"
@@ -188,7 +188,7 @@ if ($continue -notlike "y"){
 }
 
 Write-Output "Creating a classification.json file in $output"
-rganonymize classify --database-engine SqlServer --connection-string $targetConnectionString --classification-file "$output\classification.json" --output-all-columns 2>&1 | %{ "$_" }
+rganonymize classify --database-engine SqlServer --connection-string="$targetConnectionString" --classification-file "$output\classification.json" --output-all-columns 
 
 Write-Output ""
 Write-Output "*********************************************************************************************************"
@@ -212,7 +212,7 @@ if ($continue -notlike "y"){
 }
 
 Write-Output "Creating a masking.json file based on contents of classification.json in $output"
-rganonymize map --classification-file "$output\classification.json" --masking-file "$output\masking.json" 2>&1 | %{ "$_" }
+rganonymize map --classification-file="$output\classification.json" --masking-file="$output\masking.json" 
 
 Write-Output ""
 Write-Output "*********************************************************************************************************"
@@ -234,7 +234,7 @@ if ($continue -notlike "y"){
     break
 }
 Write-Output "Masking target database, based on contents of masking.json file in $output"
-rganonymize mask --database-engine SqlServer --connection-string $targetConnectionString --masking-file "$output\masking.json" 2>&1 | %{ "$_" }
+rganonymize mask --database-engine SqlServer --connection-string="$targetConnectionString" --masking-file="$output\masking.json" 
 
 Write-Output ""
 Write-Output "*********************************************************************************************************"

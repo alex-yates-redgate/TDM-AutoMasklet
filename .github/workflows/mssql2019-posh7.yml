@@ -43,18 +43,20 @@ jobs:
           echo "::set-output name=dbPassword::$dbPassword"
           echo "::set-output name=instance::$instance"
 
-      - name: Run AutoMasklet in PowerShell 5
+      - name: Run AutoMasklet in PowerShell 7
         shell: powershell
         env:
           REDGATE_LICENSING_PERMIT: ${{ secrets.REDGATE_LICENSING_PERMIT  }}
         run: |
-          Write-Output 'Running in PowerShell 5'
-          $PSVersionTable
-          Write-Output 'Running Auto-Masklet...'
-          Write-Output "  -sqlInstance ${{ steps.createDc.outputs.instance }}"
-          Write-Output "  -sqlUser ${{ steps.createDc.outputs.dbUser }}"
-          .\run-auto-masklet.ps1 -sqlUser '${{ steps.createDc.outputs.dbUser }}' -sqlPassword '${{ steps.createDc.outputs.dbPassword }}' -sqlInstance '${{ steps.createDc.outputs.instance }}' -autoContinue -skipAuth
-
+          pwsh -Command @'
+          Write-Host "Running in PowerShell 7"
+          $PSVersionTable  
+          Write-Output "Running Auto-Masklet..."
+          $scriptCommand = ".\run-auto-masklet.ps1 -sqlUser ${{ steps.createDc.outputs.dbUser }} -sqlPassword ${{ steps.createDc.outputs.dbPassword }} -sqlInstance ${{ steps.createDc.outputs.instance }} -autoContinue -skipAuth"
+          Write-Output $scriptCommand
+          Invoke-Expression $scriptCommand
+          '@
+  
       - name: Validating results
         shell: powershell
         run: |
@@ -82,3 +84,5 @@ jobs:
           } else {
             Write-Output "rganonymize ran successfully"
           }
+
+

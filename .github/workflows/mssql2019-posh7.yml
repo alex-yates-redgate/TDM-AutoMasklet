@@ -59,14 +59,11 @@ jobs:
           Write-Output "  -sqlInstance '${{ steps.createDc.outputs.instance }}'"
           Write-Output "  -sqlUser '${{ steps.createDc.outputs.dbUser }}'"
           .\run-auto-masklet.ps1 -sqlUser '${{ steps.createDc.outputs.dbUser }}' -sqlPassword '${{ steps.createDc.outputs.dbPassword }}' -sqlInstance '${{ steps.createDc.outputs.instance }}' -autoContinue -skipAuth
-        
-        
   
       - name: Validating results
-        shell: powershell
+        shell: pwsh
         if: ${{ always() }}
         run: |
-          install-module dbatools -Confirm:$False -Force
           import-module dbatools
           Set-DbatoolsConfig -FullName sql.connection.trustcert -Value $true
           Set-DbatoolsConfig -FullName sql.connection.encrypt -Value $false

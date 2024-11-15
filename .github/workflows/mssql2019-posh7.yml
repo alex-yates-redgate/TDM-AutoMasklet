@@ -52,7 +52,7 @@ jobs:
           Write-Host "Running in PowerShell 7"
           $PSVersionTable  
           Write-Output "Running Auto-Masklet..."
-          $scriptCommand = ".\run-auto-masklet.ps1 -sqlUser ${{ steps.createDc.outputs.dbUser }} -sqlPassword ${{ steps.createDc.outputs.dbPassword }} -sqlInstance ${{ steps.createDc.outputs.instance }} -autoContinue -skipAuth"
+          $scriptCommand = ".\run-auto-masklet.ps1 -sqlUser ${{ steps.createDc.outputs.dbUser }} -sqlPassword ${{ steps.createDc.outputs.dbPassword }} -sqlInstance '${{ steps.createDc.outputs.instance }}' -autoContinue -skipAuth"
           Write-Output $scriptCommand
           Invoke-Expression $scriptCommand
           '@
@@ -64,7 +64,7 @@ jobs:
           $SqlCredential = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList ${{ steps.createDc.outputs.dbUser }}, (ConvertTo-SecureString ${{ steps.createDc.outputs.dbPassword }} -AsPlainText -Force)
           
           # Validating rgsubset
-          $totalOrders = (Invoke-DbaQuery -SqlInstance ${{ steps.createDc.outputs.instance }} -Database Northwind_Subset -Query "SELECT COUNT (*) AS TotalOrders FROM dbo.Orders" -SqlCredential $SqlCredential).TotalOrders
+          $totalOrders = (Invoke-DbaQuery -SqlInstance '${{ steps.createDc.outputs.instance }}' -Database Northwind_Subset -Query "SELECT COUNT (*) AS TotalOrders FROM dbo.Orders" -SqlCredential $SqlCredential).TotalOrders
           Write-Output "If rgsubset ran successfully, there should be 12 orders in the Northwind_Subset database"
           Write-Output "Total Orders: $totalOrders"
           if ($totalOrders -eq 12) {
@@ -75,7 +75,7 @@ jobs:
           }
 
           # Validating rganonymize
-          $order10248City = (Invoke-DbaQuery -SqlInstance ${{ steps.createDc.outputs.instance }} -Database Northwind_Subset -Query "SELECT ShipCity FROM dbo.Orders WHERE OrderID = 10248" -SqlCredential $SqlCredential).ShipCity
+          $order10248City = (Invoke-DbaQuery -SqlInstance '${{ steps.createDc.outputs.instance }}' -Database Northwind_Subset -Query "SELECT ShipCity FROM dbo.Orders WHERE OrderID = 10248" -SqlCredential $SqlCredential).ShipCity
           Write-Output "If rganonymize ran successfully, order 10248 should NOT be Reims"
           Write-Output "ShipCity: $order10248City"
           if ($order10248City -like "Reims") {

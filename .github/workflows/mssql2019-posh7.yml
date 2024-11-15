@@ -46,19 +46,21 @@ jobs:
       - name: Run AutoMasklet in PowerShell 7
         shell: powershell
         env:
-          REDGATE_LICENSING_PERMIT: ${{ secrets.REDGATE_LICENSING_PERMIT  }}
+          REDGATE_LICENSING_PERMIT: ${{ secrets.REDGATE_LICENSING_PERMIT }}
         run: |
           pwsh -Command @'
           Write-Host "Running in PowerShell 7"
-          $PSVersionTable  
+          $PSVersionTable        
           Write-Output "Running Auto-Masklet..."
-          $scriptCommand = ".\run-auto-masklet.ps1 -sqlUser ${{ steps.createDc.outputs.dbUser }} -sqlPassword ${{ steps.createDc.outputs.dbPassword }} -sqlInstance '${{ steps.createDc.outputs.instance }}' -autoContinue -skipAuth"
+          $scriptCommand = ".\run-auto-masklet.ps1 -sqlUser '${{ steps.createDc.outputs.dbUser }}' -sqlPassword '${{ steps.createDc.outputs.dbPassword }}' -sqlInstance '${{ steps.createDc.outputs.instance }}' -autoContinue -skipAuth"      
           Write-Output $scriptCommand
-          Invoke-Expression $scriptCommand
+          Invoke-Expression $scriptCommand.Trim()
           '@
+        
   
       - name: Validating results
         shell: powershell
+        if: ${{ always() }}
         run: |
           import-module dbatools
           Set-DbatoolsConfig -FullName sql.connection.trustcert -Value $true

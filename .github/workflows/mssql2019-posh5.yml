@@ -57,6 +57,7 @@ jobs:
 
       - name: Validating results
         shell: powershell
+        if: ${{ always() }}
         run: |
           import-module dbatools
           Set-DbatoolsConfig -FullName sql.connection.trustcert -Value $true

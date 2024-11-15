@@ -1,0 +1,24 @@
+name: Dry Run Deploy
+
+on:
+  workflow_dispatch:
+
+jobs:
+  dry_run_deploy:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Create Data Container
+        id: createDc
+        env:
+          RGCLONE_API_ENDPOINT: ${{ secrets.RGCLONE_API_ENDPOINT }}
+          RGCLONE_ACCESS_TOKEN: ${{ secrets.RGCLONE_ACCESS_TOKEN }}
+        run: |
+          write-error "not implemented yet"
+      
+      - name: Flyway Migrate
+        run: |
+          write-error "not implemented yet"

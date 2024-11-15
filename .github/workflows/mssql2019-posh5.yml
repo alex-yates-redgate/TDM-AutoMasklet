@@ -42,15 +42,22 @@ jobs:
           echo "dbUser=$dbUser" >> $GITHUB_STATE
           echo "dbPassword=$dbPassword" >> $GITHUB_STATE
           echo "instance=$instance" >> $GITHUB_STATE
-              
+
       - name: Run a command in PowerShell 5
         run: |
-          powershell -Command 'Write-Output "Running in PowerShell 5"'
-          powershell -Command 'Write-Output $PSVersionTable
-          powershell -Command 'Write-Output "Running Auto-Masklet..."'
-          powershell -Command 'Write-Output `".\run-auto-masklet.ps1 -sqlUser ${{ steps.createDc.outputs.dbUser }} -sqlPassword ${{ steps.createDc.outputs.dbPassword }} -sqlInstance ${{ steps.createDc.outputs.instance }} -autoContinue -skipAuth`"'
-          powershell -Command ".\run-auto-masklet.ps1 -sqlUser ${{ steps.createDc.outputs.dbUser }} -sqlPassword ${{ steps.createDc.outputs.dbPassword }} -sqlInstance ${{ steps.createDc.outputs.instance }} -autoContinue -skipAuth"
-
+          powershell -Command "
+            Write-Output 'Running in PowerShell 5';
+            $PSVersionTable;
+            Write-Output 'Running Auto-Masklet...';
+            Write-Output '  -sqlInstance ${{ steps.createDc.outputs.instance }}';
+            Write-Output '  -sqlUser ${{ steps.createDc.outputs.dbUser }}';
+            .\run-auto-masklet.ps1 -sqlUser '${{ steps.createDc.outputs.dbUser }}' -sqlPassword '${{ steps.createDc.outputs.dbPassword }}' -sqlInstance '${{ steps.createDc.outputs.instance }}' -autoContinue -skipAuth;
+          "
+        
       - name: Run a command in PowerShell 7
         run: |
           pwsh -Command "Write-Host 'Running in PowerShell 7'; $PSVersionTable"
+          pwsh -Command 'Write-Output "Running Auto-Masklet..."'
+          pwsh -Command 'Write-Output `".\run-auto-masklet.ps1 -sqlUser ${{ steps.createDc.outputs.dbUser }} -sqlPassword ${{ steps.createDc.outputs.dbPassword }} -sqlInstance ${{ steps.createDc.outputs.instance }} -autoContinue -skipAuth`"'
+          pwsh -Command ".\run-auto-masklet.ps1 -sqlUser ${{ steps.createDc.outputs.dbUser }} -sqlPassword ${{ steps.createDc.outputs.dbPassword }} -sqlInstance ${{ steps.createDc.outputs.instance }} -autoContinue -skipAuth"
+

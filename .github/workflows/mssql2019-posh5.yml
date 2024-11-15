@@ -39,19 +39,32 @@ jobs:
           Write-Output "Data container created successfully and available at: $instance"
 
           # Set output values so that I can use them in subsequent steps
-          echo "dbUser=$dbUser" >> $GITHUB_STATE
-          echo "dbPassword=$dbPassword" >> $GITHUB_STATE
-          echo "instance=$instance" >> $GITHUB_STATE
+          echo "::set-output name=dbUser::$dbUser"
+          echo "::set-output name=dbPassword::$dbPassword"
+          echo "::set-output name=instance::$instance"
 
       - name: Run a command in PowerShell 5
+        shell: powershell
+        run: |
+          Write-Output 'Running in PowerShell 5'
+          $PSVersionTable
+          Write-Output 'Running Auto-Masklet...'
+          Write-Output "  -sqlInstance ${{ steps.createDc.outputs.instance }}"
+          Write-Output "  -sqlUser ${{ steps.createDc.outputs.dbUser }}"
+          .\run-auto-masklet.ps1 -sqlUser '${{ steps.createDc.outputs.dbUser }}' -sqlPassword '${{ steps.createDc.outputs.dbPassword }}' -sqlInstance '${{ steps.createDc.outputs.instance }}' -autoContinue -skipAuth
+  
+
+
+      - name: Run a command in PowerShell 5
+        shell: powershell
         run: |
           powershell -Command "
-            Write-Output 'Running in PowerShell 5';
-            $PSVersionTable;
-            Write-Output 'Running Auto-Masklet...';
-            Write-Output '  -sqlInstance ${{ steps.createDc.outputs.instance }}';
-            Write-Output '  -sqlUser ${{ steps.createDc.outputs.dbUser }}';
-            .\run-auto-masklet.ps1 -sqlUser '${{ steps.createDc.outputs.dbUser }}' -sqlPassword '${{ steps.createDc.outputs.dbPassword }}' -sqlInstance '${{ steps.createDc.outputs.instance }}' -autoContinue -skipAuth;
+            Write-Output 'Running in PowerShell 5'
+            $PSVersionTable
+            Write-Output 'Running Auto-Masklet...'
+            Write-Output '  -sqlInstance ${{ steps.createDc.outputs.instance }}'
+            Write-Output '  -sqlUser ${{ steps.createDc.outputs.dbUser }}'
+            .\run-auto-masklet.ps1 -sqlUser '${{ steps.createDc.outputs.dbUser }}' -sqlPassword '${{ steps.createDc.outputs.dbPassword }}' -sqlInstance '${{ steps.createDc.outputs.instance }}' -autoContinue -skipAuth
           "
         
       - name: Run a command in PowerShell 7

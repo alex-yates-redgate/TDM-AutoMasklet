@@ -3,7 +3,7 @@ name: mssql2019-posh5
 on: push
 
 jobs:
-  dry_run_deploy:
+  run_auto-masklet:
     runs-on: windows-latest
 
     steps:
@@ -16,6 +16,7 @@ jobs:
           RGCLONE_API_ENDPOINT: ${{ secrets.RGCLONE_API_ENDPOINT }}
           RGCLONE_ACCESS_TOKEN: ${{ secrets.RGCLONE_ACCESS_TOKEN }}
         run: |
+          # Download the rgclone CLI
           $downloadUrl = $env:RGCLONE_API_ENDPOINT + "cloning-api/download/cli/windows-amd64"
           $zipFile = ".\rgclone.zip"
           $rgCloneLocation = "."
@@ -26,11 +27,29 @@ jobs:
           Write-Output "  Extracting zip to: $rgCloneLocation"
           Add-Type -assembly "System.IO.Compression.Filesystem";
           [IO.Compression.Zipfile]::ExtractToDirectory($zipFile, $rgCloneLocation);
-          dir
-          .\rgclone get di
-          
+
+          # Create an empty SQL Server instance on which to run auto-masklet
+          Write-Output "Creating data container"
+          $output = .\rgclone create dc -i 298 -t 10m -o json | ConvertFrom-Json
+          $dbPassword = $output.password
+          $dbUser = $output.user
+          $sqlhost = $output.host
+          $sqlport = $output.port
+          $instance = "${sqlhost},${sqlport}"
+          Write-Output "Data container created successfully and available at: $instance"
+
+          # Set output values so that I can use them in subsequent steps
+          Write-Host "::set-output name=dbUser::$dbUser"
+          Write-Host "::set-output name=dbPassword::$dbPassword"
+          Write-Host "::set-output name=instance::$instance"
       - name: Run a command in PowerShell 5
-        run: powershell -Command "Write-Host 'Running in PowerShell 5'; $PSVersionTable"
+        run: |
+          powershell -Command 'Write-Output "Running in PowerShell 5"'
+          powershell -Command 'Write-Output $PSVersionTable
+          powershell -Command 'Write-Output "Running Auto-Masklet..."'
+          powershell -Command "Write-Output `".\run-auto-masklet.ps1 -sqlUser ${{ steps.createDc.outputs.dbUser }} -sqlPassword ${{ steps.createDc.outputs.dbPassword }} -sqlInstance ${{ steps.createDc.outputs.instance }} -autoContinue -skipAuth`""
+          powershell -Command ".\run-auto-masklet.ps1 -sqlUser ${{ steps.createDc.outputs.dbUser }} -sqlPassword ${{ steps.createDc.outputs.dbPassword }} -sqlInstance ${{ steps.createDc.outputs.instance }} -autoContinue -skipAuth"
 
       - name: Run a command in PowerShell 7
-        run: pwsh -Command "Write-Host 'Running in PowerShell 7'; $PSVersionTable"
+        run: |
+          pwsh -Command "Write-Host 'Running in PowerShell 7'; $PSVersionTable"

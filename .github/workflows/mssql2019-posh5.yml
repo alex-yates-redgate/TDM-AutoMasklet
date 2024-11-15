@@ -1,4 +1,4 @@
-name: Dry Run Deploy
+name: mssql2019-posh5
 
 on:
   workflow_dispatch:

@@ -10,14 +10,26 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Create Data Container
+      - name: Install rgclone CLI and create data container
         id: createDc
         env:
           RGCLONE_API_ENDPOINT: ${{ secrets.RGCLONE_API_ENDPOINT }}
           RGCLONE_ACCESS_TOKEN: ${{ secrets.RGCLONE_ACCESS_TOKEN }}
         run: |
-          write-output $env:RGCLONE_API_ENDPOINT
-          write-output $PSVersionTable
+          $downloadUrl = $env:RGCLONE_API_ENDPOINT + "cloning-api/download/cli/windows-amd64"
+          $zipFile = ".\rgclone.zip"
+          $rgCloneLocation = "."
+          Write-Output "  Downloading rgclone.exe zip file..."
+          Write-Output "    from: $downloadUrl"
+          Write-Output "    to:   $zipFile"
+          Invoke-WebRequest -Uri $downloadUrl -OutFile $zipFile
+          Write-Output "  Extracting zip to: $rgCloneLocation"
+          Add-Type -assembly "System.IO.Compression.Filesystem";
+          [IO.Compression.Zipfile]::ExtractToDirectory($zipFile, $rgCloneLocation);
+          rgclone get di
+          
+      - name: Run a command in PowerShell 5
+        run: powershell -Command "Write-Host 'Running in PowerShell 5'; $PSVersionTable"
 
-      
-
+      - name: Run a command in PowerShell 7
+        run: pwsh -Command "Write-Host 'Running in PowerShell 7'; $PSVersionTable"

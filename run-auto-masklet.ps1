@@ -1,8 +1,7 @@
 param (
     $sqlInstance = "localhost",
-    $databaseName = "Northwind",
-    $startingTable = "dbo.Orders",
-    $filterClause = "OrderId < 10260",
+    $sqlUser = "",
+    $sqlPassword = "",
     $output = "C:/temp/auto-masklet",
     $trustCert = $true,
     [switch]$autoContinue,
@@ -10,13 +9,26 @@ param (
 )
 
 # Configuration
+$databaseName = "Northwind",
 $sourceDb = "${databaseName}_FullRestore"
 $targetDb = "${databaseName}_Subset"
 $fullRestoreCreateScript = "$PSScriptRoot/helper_scripts/CreateNorthwindFullRestore.sql"
 $subsetCreateScript = "$PSScriptRoot/helper_scripts/CreateNorthwindSubset.sql"
 $installTdmClisScript = "$PSScriptRoot/helper_scripts/installTdmClis.ps1"
-$sourceConnectionString = "`"server=$sqlInstance;database=$sourceDb;Trusted_Connection=yes;TrustServerCertificate=yes`""
-$targetConnectionString = "`"server=$sqlInstance;database=$targetDb;Trusted_Connection=yes;TrustServerCertificate=yes`""
+
+$winAuth = $true
+$sourceConnectionString = ""
+$targetConnectionString = ""
+if (($sqlUser -like "") -and ($sqlPassword -like "")){    
+    $sourceConnectionString = "`"server=$sqlInstance;database=$sourceDb;Trusted_Connection=yes;TrustServerCertificate=yes`""
+    $targetConnectionString = "`"server=$sqlInstance;database=$targetDb;Trusted_Connection=yes;TrustServerCertificate=yes`""
+}
+else {
+    $winAuth = $false
+    $SqlCredential = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList $sqlUser, (ConvertTo-SecureString $sqlPassword -AsPlainText -Force)
+    $sourceConnectionString = "server=$sqlInstance;database=$sourceDb;TrustServerCertificate=yes;User Id=$sqlUser;Password=$sqlPassword;"
+    $targetConnectionString = "server=$sqlInstance;database=$targetDb;TrustServerCertificate=yes;User Id=$sqlUser;Password=$sqlPassword;"
+}
 
 Write-Output "Configuration:"
 Write-Output "- sqlInstance:             $sqlInstance"
@@ -26,8 +38,7 @@ Write-Output "- targetDb:                $targetDb"
 Write-Output "- fullRestoreCreateScript: $fullRestoreCreateScript"
 Write-Output "- subsetCreateScript:      $subsetCreateScript"
 Write-Output "- installTdmClisScript:    $installTdmClisScript"
-Write-Output "- startingTable:           $startingTable"
-Write-Output "- filterClause:            $filterClause"
+Write-Output "- Using Windows Auth:      $winAuth"
 Write-Output "- sourceConnectionString:  $sourceConnectionString"
 Write-Output "- targetConnectionString:  $targetConnectionString"
 Write-Output "- output:                  $output"
@@ -105,20 +116,46 @@ if (-not $skipAuth){
 
 # If exists, drop the source and target databases
 Write-Output "  If exists, dropping the source and target databases"
-$dbsToDelete = Get-DbaDatabase -SqlInstance $sqlInstance -Database $sourceDb,$targetDb
+if ($winAuth){
+    $dbsToDelete = Get-DbaDatabase -SqlInstance $sqlInstance -Database $sourceDb,$targetDb
+}
+else {
+    $dbsToDelete = Get-DbaDatabase -SqlInstance $sqlInstance -Database $sourceDb,$targetDb -SqlCredential $SqlCredential
+}
+
 forEach ($db in $dbsToDelete.Name){
     Write-Output "    Dropping database $db"
     $sql = "ALTER DATABASE $db SET single_user WITH ROLLBACK IMMEDIATE; DROP DATABASE $db;"
-    Invoke-DbaQuery -SqlInstance $sqlInstance -Query $sql
+    if ($winAuth){
+        Invoke-DbaQuery -SqlInstance $sqlInstance -Query $sql
+    }
+    else {
+        Invoke-DbaQuery -SqlInstance $sqlInstance -Query $sql -SqlCredential $SqlCredential
+    }
 }
 
 # Create the fullRestore and subset databases
 Write-Output "  Creating the fullRestore and subset databases"
-New-DbaDatabase -SqlInstance $sqlInstance -Name $sourceDb, $targetDb | Out-Null
+if ($winAuth){
+    New-DbaDatabase -SqlInstance $sqlInstance -Name $sourceDb, $targetDb | Out-Null
+}
+else {
+    New-DbaDatabase -SqlInstance $sqlInstance -Name $sourceDb, $targetDb -SqlCredential $SqlCredential | Out-Null
+}
 Write-Output "    Creating the $sourceDb database objects and data"
-Invoke-DbaQuery -SqlInstance $sqlInstance -Database $sourceDb -File $fullRestoreCreateScript | Out-Null
+if ($winAuth){
+    Invoke-DbaQuery -SqlInstance $sqlInstance -Database $sourceDb -File $fullRestoreCreateScript | Out-Null
+}
+else {
+    Invoke-DbaQuery -SqlInstance $sqlInstance -Database $sourceDb -File $fullRestoreCreateScript -SqlCredential $SqlCredential | Out-Null
+}
 Write-Output "    Creating the $targetDb database objects"
-Invoke-DbaQuery -SqlInstance $sqlInstance -Database $targetDb -File $subsetCreateScript | Out-Null
+if ($winAuth){
+    Invoke-DbaQuery -SqlInstance $sqlInstance -Database $targetDb -File $subsetCreateScript | Out-Null
+}
+else {
+    Invoke-DbaQuery -SqlInstance $sqlInstance -Database $targetDb -File $subsetCreateScript -SqlCredential $SqlCredential | Out-Null
+}
 
 # Clean output directory
 Write-Output "  Cleaning the output directory at: $output"

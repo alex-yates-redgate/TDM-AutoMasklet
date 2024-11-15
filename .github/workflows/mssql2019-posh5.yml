@@ -50,6 +50,10 @@ jobs:
         run: |
           Write-Output 'Running in PowerShell 5'
           $PSVersionTable
+          if ($psVersion -notlike "5"){
+            Write-Error "PowerShell version should be 7, but it is $psVersion"
+            exit 1
+          }
           Write-Output 'Running Auto-Masklet...'
           Write-Output '  -sqlInstance ${{ steps.createDc.outputs.instance }}'
           Write-Output '  -sqlUser ${{ steps.createDc.outputs.dbUser }}'

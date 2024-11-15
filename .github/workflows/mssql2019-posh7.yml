@@ -44,18 +44,22 @@ jobs:
           echo "::set-output name=instance::$instance"
 
       - name: Run AutoMasklet in PowerShell 7
-        shell: powershell
+        shell: pwsh
         env:
           REDGATE_LICENSING_PERMIT: ${{ secrets.REDGATE_LICENSING_PERMIT }}
         run: |
-          pwsh -Command @'
-          Write-Host "Running in PowerShell 7"
-          $PSVersionTable        
-          Write-Output "Running Auto-Masklet..."
-          $scriptCommand = ".\run-auto-masklet.ps1 -sqlUser '${{ steps.createDc.outputs.dbUser }}' -sqlPassword '${{ steps.createDc.outputs.dbPassword }}' -sqlInstance '${{ steps.createDc.outputs.instance }}' -autoContinue -skipAuth"      
-          Write-Output $scriptCommand
-          Invoke-Expression $scriptCommand.Trim()
-          '@
+          Write-Output 'Running in PowerShell 7'
+          $PSVersionTable
+          $psVersion = $PSVersionTable.PSVersion.Major
+          if ($psVersion -notlike "7"){
+            Write-Error "PowerShell version should be 7, but it is $psVersion"
+            exit 1
+          }
+          Write-Output 'Running Auto-Masklet...'
+          Write-Output "  -sqlInstance '${{ steps.createDc.outputs.instance }}'"
+          Write-Output "  -sqlUser '${{ steps.createDc.outputs.dbUser }}'"
+          .\run-auto-masklet.ps1 -sqlUser '${{ steps.createDc.outputs.dbUser }}' -sqlPassword '${{ steps.createDc.outputs.dbPassword }}' -sqlInstance '${{ steps.createDc.outputs.instance }}' -autoContinue -skipAuth
+        
         
   
       - name: Validating results

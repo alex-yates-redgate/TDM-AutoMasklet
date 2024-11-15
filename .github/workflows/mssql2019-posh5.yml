@@ -1,7 +1,6 @@
 name: mssql2019-posh5
 
-on:
-  workflow_dispatch:
+on: push
 
 jobs:
   dry_run_deploy:
@@ -17,8 +16,8 @@ jobs:
           RGCLONE_API_ENDPOINT: ${{ secrets.RGCLONE_API_ENDPOINT }}
           RGCLONE_ACCESS_TOKEN: ${{ secrets.RGCLONE_ACCESS_TOKEN }}
         run: |
-          write-error "not implemented yet"
+          write-output $env:RGCLONE_API_ENDPOINT
+          write-output $PSVersionTable
+
       
-      - name: Flyway Migrate
-        run: |
-          write-error "not implemented yet"
+

@@ -9,7 +9,7 @@ param (
 )
 
 # Configuration
-$databaseName = "Northwind",
+$databaseName = "Northwind"
 $sourceDb = "${databaseName}_FullRestore"
 $targetDb = "${databaseName}_Subset"
 $fullRestoreCreateScript = "$PSScriptRoot/helper_scripts/CreateNorthwindFullRestore.sql"

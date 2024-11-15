@@ -57,8 +57,13 @@ jobs:
         
       - name: Run a command in PowerShell 7
         run: |
-          pwsh -Command "Write-Host 'Running in PowerShell 7'; $PSVersionTable"
-          pwsh -Command 'Write-Output "Running Auto-Masklet..."'
-          pwsh -Command 'Write-Output `".\run-auto-masklet.ps1 -sqlUser ${{ steps.createDc.outputs.dbUser }} -sqlPassword ${{ steps.createDc.outputs.dbPassword }} -sqlInstance ${{ steps.createDc.outputs.instance }} -autoContinue -skipAuth`"'
-          pwsh -Command ".\run-auto-masklet.ps1 -sqlUser ${{ steps.createDc.outputs.dbUser }} -sqlPassword ${{ steps.createDc.outputs.dbPassword }} -sqlInstance ${{ steps.createDc.outputs.instance }} -autoContinue -skipAuth"
-
+          pwsh -Command @'
+          Write-Host "Running in PowerShell 7"
+          $PSVersionTable
+      
+          Write-Output "Running Auto-Masklet..."
+      
+          $scriptCommand = ".\run-auto-masklet.ps1 -sqlUser ${{ steps.createDc.outputs.dbUser }} -sqlPassword ${{ steps.createDc.outputs.dbPassword }} -sqlInstance ${{ steps.createDc.outputs.instance }} -autoContinue -skipAuth"
+          Write-Output $scriptCommand
+          Invoke-Expression $scriptCommand
+          '@

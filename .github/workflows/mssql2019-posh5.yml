@@ -50,8 +50,9 @@ jobs:
         run: |
           Write-Output 'Running in PowerShell 5'
           $PSVersionTable
+          $psVersion = $PSVersionTable.PSVersion.Major
           if ($psVersion -notlike "5"){
-            Write-Error "PowerShell version should be 7, but it is $psVersion"
+            Write-Error "PowerShell version should be 5, but it is $psVersion"
             exit 1
           }
           Write-Output 'Running Auto-Masklet...'

@@ -4,7 +4,9 @@ param (
     $startingTable = "dbo.Orders",
     $filterClause = "OrderId < 10260",
     $output = "C:/temp/auto-masklet",
-    $trustCert = $true
+    $trustCert = $true,
+    [switch]$autoContinue,
+    [switch]$skipAuth
 )
 
 # Configuration
@@ -13,8 +15,8 @@ $targetDb = "${databaseName}_Subset"
 $fullRestoreCreateScript = "$PSScriptRoot/helper_scripts/CreateNorthwindFullRestore.sql"
 $subsetCreateScript = "$PSScriptRoot/helper_scripts/CreateNorthwindSubset.sql"
 $installTdmClisScript = "$PSScriptRoot/helper_scripts/installTdmClis.ps1"
-$sourceConnectionString = "server=$sqlInstance;database=$sourceDb;Trusted_Connection=yes;TrustServerCertificate=yes"
-$targetConnectionString = "server=$sqlInstance;database=$targetDb;Trusted_Connection=yes;TrustServerCertificate=yes"
+$sourceConnectionString = "`"server=$sqlInstance;database=$sourceDb;Trusted_Connection=yes;TrustServerCertificate=yes`""
+$targetConnectionString = "`"server=$sqlInstance;database=$targetDb;Trusted_Connection=yes;TrustServerCertificate=yes`""
 
 Write-Output "Configuration:"
 Write-Output "- sqlInstance:             $sqlInstance"
@@ -92,12 +94,14 @@ if (-not ($rganonymizeExe -and $rgsubsetExe)){
 }
 
 # Start trial
-Write-Output "  Authorizing rgsubset, and starting a trial (if not already started):"
-Write-Output "    rgsubset auth --agree-to-eula --start-trial"
-rgsubset auth --agree-to-eula --start-trial
-Write-Output "  Authorizing rganonymize:"
-Write-Output "    rganonymize auth --agree-to-eula"
-rganonymize auth --agree-to-eula
+if (-not $skipAuth){
+    Write-Output "  Authorizing rgsubset, and starting a trial (if not already started):"
+    Write-Output "    rgsubset auth --agree-to-eula --start-trial"
+    rgsubset auth --agree-to-eula --start-trial
+    Write-Output "  Authorizing rganonymize:"
+    Write-Output "    rganonymize auth --agree-to-eula"
+    rganonymize auth --agree-to-eula
+}
 
 # If exists, drop the source and target databases
 Write-Output "  If exists, dropping the source and target databases"
@@ -152,21 +156,24 @@ Write-Output "  ORDER BY o.OrderID ASC;"
 Write-Output ""
 Write-Output "Next:"
 Write-Output "We will run the following rgsubset command to copy a subset of the data from $sourceDb to $targetDb."
-Write-Output "  rgsubset run --database-engine=sqlserver --source-connection-string=$sourceConnectionString --target-connection-string=$targetConnectionString --options-file .\helper_scripts\rgsubset-options.json --target-database-write-mode Overwrite"
+Write-Output "  rgsubset run --database-engine=sqlserver --source-connection-string=$sourceConnectionString --target-connection-string=$targetConnectionString --options-file `".\helper_scripts\rgsubset-options.json`" --target-database-write-mode Overwrite"
 Write-Output "The subset will include data from the $startingTable table, based on the filter clause $filterClause."
 Write-Output "It will also include any data from any other tables that are required to maintain referential integrity."
 Write-Output "*********************************************************************************************************"
 Write-Output ""
-$continue = Read-Host "Continue? (y/n)"
-if ($continue -notlike "y"){
-    Write-output 'Response not like "y". Teminating script.'
-    break
+
+if (-not $autoContinue){
+    $continue = Read-Host "Continue? (y/n)"
+    if ($continue -notlike "y"){
+        Write-output 'Response not like "y". Teminating script.'
+        break
+    }
 }
 
 # running subset
 Write-Output ""
 Write-Output "Running rgsubset to copy a subset of the data from $sourceDb to $targetDb."
-rgsubset run --database-engine=sqlserver --source-connection-string="$sourceConnectionString" --target-connection-string="$targetConnectionString" --options-file ".\helper_scripts\rgsubset-options.json" --target-database-write-mode Overwrite
+rgsubset run --database-engine=sqlserver --source-connection-string=$sourceConnectionString --target-connection-string=$targetConnectionString --options-file ".\helper_scripts\rgsubset-options.json" --target-database-write-mode Overwrite
 
 Write-Output ""
 Write-Output "*********************************************************************************************************"
@@ -178,17 +185,20 @@ Write-Output "You can see how much data has been included from for each table by
 Write-Output ""
 Write-Output "Next:"
 Write-Output "We will run rganonymize classify to create a classification.json file, documenting the location of any PII:"
-Write-Output "  rganonymize classify --database-engine SqlServer --connection-string $targetConnectionString --classification-file $output\classification.json --output-all-columns"
+Write-Output "  rganonymize classify --database-engine SqlServer --connection-string $targetConnectionString --classification-file `"$output\classification.json`" --output-all-columns"
 Write-Output "*********************************************************************************************************"
 Write-Output ""
-$continue = Read-Host "Continue? (y/n)"
-if ($continue -notlike "y"){
-    Write-output 'Response not like "y". Teminating script.'
-    break
+
+if (-not $autoContinue){
+    $continue = Read-Host "Continue? (y/n)"
+    if ($continue -notlike "y"){
+        Write-output 'Response not like "y". Teminating script.'
+        break
+    }
 }
 
 Write-Output "Creating a classification.json file in $output"
-rganonymize classify --database-engine SqlServer --connection-string="$targetConnectionString" --classification-file "$output\classification.json" --output-all-columns 
+rganonymize classify --database-engine SqlServer --connection-string=$targetConnectionString --classification-file "$output\classification.json" --output-all-columns 
 
 Write-Output ""
 Write-Output "*********************************************************************************************************"
@@ -202,13 +212,16 @@ Write-Output "  deployed to production."
 Write-Output ""
 Write-Output "Next:"
 Write-Output "We will run the rganonymize map command to create a masking.json file, defining how the PII will be masked:"
-Write-Output "  rganonymize map --classification-file $output\classification.json --masking-file $output\masking.json"
+Write-Output "  rganonymize map --classification-file `"$output\classification.json`" --masking-file `"$output\masking.json`""
 Write-Output "*********************************************************************************************************"
 Write-Output ""
-$continue = Read-Host "Continue? (y/n)"
-if ($continue -notlike "y"){
-    Write-output 'Response not like "y". Teminating script.'
-    break
+
+if (-not $autoContinue){
+    $continue = Read-Host "Continue? (y/n)"
+    if ($continue -notlike "y"){
+        Write-output 'Response not like "y". Teminating script.'
+        break
+    }
 }
 
 Write-Output "Creating a masking.json file based on contents of classification.json in $output"
@@ -225,16 +238,20 @@ Write-Output "  basis, or at an appropriate point in your sprint/release cycle."
 Write-Output ""
 Write-Output "Next:"
 Write-Output "We will run the rganonymize mask command to mask the PII in ${targetDb}:"
-Write-Output "  rganonymize mask --database-engine SqlServer --connection-string $targetConnectionString --masking-file $output\masking.json"
+Write-Output "  rganonymize mask --database-engine SqlServer --connection-string $targetConnectionString --masking-file `"$output\masking.json`""
 Write-Output "*********************************************************************************************************"
 Write-Output ""
-$continue = Read-Host "Continue? (y/n)"
-if ($continue -notlike "y"){
-    Write-output 'Response not like "y". Teminating script.'
-    break
+
+if (-not $autoContinue){
+    $continue = Read-Host "Continue? (y/n)"
+    if ($continue -notlike "y"){
+        Write-output 'Response not like "y". Teminating script.'
+        break
+    }
 }
+
 Write-Output "Masking target database, based on contents of masking.json file in $output"
-rganonymize mask --database-engine SqlServer --connection-string="$targetConnectionString" --masking-file="$output\masking.json" 
+rganonymize mask --database-engine SqlServer --connection-string=$targetConnectionString --masking-file="$output\masking.json" 
 
 Write-Output ""
 Write-Output "*********************************************************************************************************"

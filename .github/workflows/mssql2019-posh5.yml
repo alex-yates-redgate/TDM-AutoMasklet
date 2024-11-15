@@ -46,7 +46,7 @@ jobs:
       - name: Run a command in PowerShell 5
         shell: powershell
         env:
-          REDGATE_PERMIT_FILE: ${{ secrets.REDGATE_PERMIT_FILE }}
+          REDGATE_LICENSING_PERMIT: ${{ secrets.REDGATE_LICENSING_PERMIT  }}
         run: |
           Write-Output 'Running in PowerShell 5'
           $PSVersionTable

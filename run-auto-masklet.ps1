@@ -65,9 +65,16 @@ else {
         Write-Warning "    Script not running as admin. Please either install dbatools manually, or run this script as an administrator to enable installing PowerShell modules."
         break
     }
-    install-module dbatools
+    if ($autoContinue) {
+        install-module dbatools -Confirm:$False -Force
+    }
+    else {
+        install-module dbatools
+    }
+    
 }
 Write-Output "  Importing dbatools PowerShell module."
+
 import-module dbatools
 
 if ($trustCert){

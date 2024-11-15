@@ -27,7 +27,7 @@ jobs:
           Add-Type -assembly "System.IO.Compression.Filesystem";
           [IO.Compression.Zipfile]::ExtractToDirectory($zipFile, $rgCloneLocation);
           dir
-          rgclone get di
+          rgclone.exe get di
           
       - name: Run a command in PowerShell 5
         run: powershell -Command "Write-Host 'Running in PowerShell 5'; $PSVersionTable"

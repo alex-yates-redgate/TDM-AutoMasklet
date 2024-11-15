@@ -61,6 +61,8 @@ jobs:
         shell: powershell
         run: |
           import-module dbatools
+          Set-DbatoolsConfig -FullName sql.connection.trustcert -Value $true
+          Set-DbatoolsConfig -FullName sql.connection.encrypt -Value $false
           $SqlCredential = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList ${{ steps.createDc.outputs.dbUser }}, (ConvertTo-SecureString ${{ steps.createDc.outputs.dbPassword }} -AsPlainText -Force)
           
           # Validating rgsubset

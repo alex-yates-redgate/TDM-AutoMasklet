@@ -54,20 +54,6 @@ jobs:
           Write-Output "  -sqlInstance ${{ steps.createDc.outputs.instance }}"
           Write-Output "  -sqlUser ${{ steps.createDc.outputs.dbUser }}"
           .\run-auto-masklet.ps1 -sqlUser '${{ steps.createDc.outputs.dbUser }}' -sqlPassword '${{ steps.createDc.outputs.dbPassword }}' -sqlInstance '${{ steps.createDc.outputs.instance }}' -autoContinue -skipAuth
-  
-
-
-      - name: Run a command in PowerShell 5
-        shell: powershell
-        run: |
-          powershell -Command "
-            Write-Output 'Running in PowerShell 5'
-            $PSVersionTable
-            Write-Output 'Running Auto-Masklet...'
-            Write-Output '  -sqlInstance ${{ steps.createDc.outputs.instance }}'
-            Write-Output '  -sqlUser ${{ steps.createDc.outputs.dbUser }}'
-            .\run-auto-masklet.ps1 -sqlUser '${{ steps.createDc.outputs.dbUser }}' -sqlPassword '${{ steps.createDc.outputs.dbPassword }}' -sqlInstance '${{ steps.createDc.outputs.instance }}' -autoContinue -skipAuth
-          "
         
       - name: Run a command in PowerShell 7
         run: |

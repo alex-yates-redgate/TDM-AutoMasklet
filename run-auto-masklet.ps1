@@ -114,8 +114,8 @@ if (-not ($rganonymizeExe -and $rgsubsetExe)){
 # Start trial
 if (-not $skipAuth){
     Write-Output "  Authorizing rgsubset, and starting a trial (if not already started):"
-    Write-Output "    rgsubset auth --agree-to-eula --start-trial"
-    rgsubset auth --agree-to-eula --start-trial
+    Write-Output "    rgsubset auth login --i-agree-to-the-eula --start-trial"
+    rgsubset auth login --i-agree-to-the-eula --start-trial
     Write-Output "  Authorizing rganonymize:"
     Write-Output "    rganonymize auth --agree-to-eula"
     rganonymize auth --agree-to-eula

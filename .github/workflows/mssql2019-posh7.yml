@@ -1,7 +1,5 @@
 name: mssql2019-posh7
 
-on: push
-
 on:
   push:
     branches:
@@ -9,6 +7,10 @@ on:
   schedule:
     - cron: '0 3 * * *'  # Runs at 3am UTC every day
   workflow_dispatch:
+
+jobs:
+  run_auto-masklet:
+    runs-on: windows-latest
 
     steps:
       - name: Checkout code

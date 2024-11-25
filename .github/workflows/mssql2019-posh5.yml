@@ -1,6 +1,12 @@
 name: mssql2019-posh5
 
-on: push
+on:
+  push:
+    branches:
+      - main 
+  schedule:
+    - cron: '0 3 * * *'  # Runs at 3am UTC every day
+  workflow_dispatch:
 
 jobs:
   run_auto-masklet:

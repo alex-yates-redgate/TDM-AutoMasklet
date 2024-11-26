@@ -121,6 +121,14 @@ if (-not $skipAuth){
     rganonymize auth --agree-to-eula
 }
 
+# Logging the CLI versions for reference
+Write-Output ""
+Write-Output "rgsubset version is:"
+rgsubset --version
+Write-Output "rganonymize version is:"
+rganonymize --version
+Write-Output ""
+
 # If exists, drop the source and target databases
 Write-Output "  If exists, dropping the source and target databases"
 if ($winAuth){

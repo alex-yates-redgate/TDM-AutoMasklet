@@ -117,8 +117,8 @@ if (-not $skipAuth){
     Write-Output "    rgsubset auth login --i-agree-to-the-eula --start-trial"
     rgsubset auth login --i-agree-to-the-eula --start-trial
     Write-Output "  Authorizing rganonymize:"
-    Write-Output "    rganonymize auth --agree-to-eula"
-    rganonymize auth --agree-to-eula
+    Write-Output "    rganonymize auth login --i-agree-to-the-eula"
+    rganonymize auth --i-agree-to-the-eula
 }
 
 # Logging the CLI versions for reference

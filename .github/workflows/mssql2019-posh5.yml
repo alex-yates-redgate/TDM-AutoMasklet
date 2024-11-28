@@ -22,6 +22,8 @@ jobs:
           RGCLONE_API_ENDPOINT: ${{ secrets.RGCLONE_API_ENDPOINT }}
           RGCLONE_ACCESS_TOKEN: ${{ secrets.RGCLONE_ACCESS_TOKEN }}
         run: |
+          Write-Error "Testing run failure notifications"
+          exit 1
           # Download the rgclone CLI
           $downloadUrl = $env:RGCLONE_API_ENDPOINT + "cloning-api/download/cli/windows-amd64"
           $zipFile = ".\rgclone.zip"

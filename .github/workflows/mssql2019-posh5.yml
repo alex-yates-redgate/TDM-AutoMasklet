@@ -44,7 +44,7 @@ jobs:
           $output = .\rgclone get di $emptyDiName --ignore-not-found -o json
           if ($output -eq $null -or $output -eq "") {
               Write-Output "Image does not exist. Creating image..."
-              .\rgclone create di -f empty-image.yaml
+              .\rgclone create di -f .\helper_scripts\empty-image.yaml
           } else {
               Write-Output "Image already exists. Moving on..."
           }

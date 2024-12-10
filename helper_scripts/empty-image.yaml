@@ -1,0 +1,4 @@
+sourceType: empty
+name: autoMasklet-sqlserver-2019-empty
+engine: mssql
+version: 2019

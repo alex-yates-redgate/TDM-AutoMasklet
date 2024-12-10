@@ -57,7 +57,7 @@ jobs:
         run: |
           # Create an empty SQL Server instance on which to run auto-masklet
           Write-Output "Creating data container"
-          $empty-di-name = 'autoMasklet-sqlserver-2019-empty'
+          $emptyDiName = 'autoMasklet-sqlserver-2019-empty'
           $output = .\rgclone create dc -i $emptyDiName -t 20m -o json | ConvertFrom-Json
           $dbPassword = $output.password
           $dbUser = $output.user

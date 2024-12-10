@@ -16,8 +16,8 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Install rgclone CLI and create data container
-        id: createDc
+      - name: Install rgclone CLI
+        id: installCLI
         env:
           RGCLONE_API_ENDPOINT: ${{ secrets.RGCLONE_API_ENDPOINT }}
           RGCLONE_ACCESS_TOKEN: ${{ secrets.RGCLONE_ACCESS_TOKEN }}
@@ -33,10 +33,32 @@ jobs:
           Write-Output "  Extracting zip to: $rgCloneLocation"
           Add-Type -assembly "System.IO.Compression.Filesystem";
           [IO.Compression.Zipfile]::ExtractToDirectory($zipFile, $rgCloneLocation);
-
+          
+      - name: Create data image
+        id: createIm
+        env:
+          RGCLONE_API_ENDPOINT: ${{ secrets.RGCLONE_API_ENDPOINT }}
+          RGCLONE_ACCESS_TOKEN: ${{ secrets.RGCLONE_ACCESS_TOKEN }}
+        run: |
+          $emptyDiName = 'autoMasklet-sqlserver-2019-empty'
+          $output = .\rgclone get di $emptyDiName --ignore-not-found -o json
+          if ($output -eq $null -or $output -eq "") {
+              Write-Output "Image does not exist. Creating image..."
+              .\rgclone create di -f .\helper_scripts\empty-image.yaml
+          } else {
+              Write-Output "Image already exists. Moving on..."
+          }
+                    
+      - name: Create data container
+        id: createDc
+        env:
+          RGCLONE_API_ENDPOINT: ${{ secrets.RGCLONE_API_ENDPOINT }}
+          RGCLONE_ACCESS_TOKEN: ${{ secrets.RGCLONE_ACCESS_TOKEN }}
+        run: |
           # Create an empty SQL Server instance on which to run auto-masklet
           Write-Output "Creating data container"
-          $output = .\rgclone create dc -i 298 -t 20m -o json | ConvertFrom-Json
+          $emptyDiName = 'autoMasklet-sqlserver-2019-empty'
+          $output = .\rgclone create dc -i $emptyDiName -t 20m -o json | ConvertFrom-Json
           $dbPassword = $output.password
           $dbUser = $output.user
           $sqlhost = $output.host

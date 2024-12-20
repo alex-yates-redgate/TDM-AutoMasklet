@@ -1,5 +1,5 @@
 {
     "jsonSchemaVersion": 1,
-    "desiredSize": "10GB",
+    "desiredSize": "50MB",
     "includeTablesRowThreshold": 300
 }

@@ -70,39 +70,23 @@ Function New-SampleDatabases {
     forEach ($db in $dbsToDelete.Name){
         Write-Verbose "    Dropping database $db"
         $sql = "ALTER DATABASE $db SET single_user WITH ROLLBACK IMMEDIATE; DROP DATABASE $db;"
-        if ($winAuth){
-            Invoke-DbaQuery -SqlInstance $sqlInstance -Query $sql
-        }
-        else {
-            Invoke-DbaQuery -SqlInstance $sqlInstance -Query $sql -SqlCredential $SqlCredential
-        }
+        Invoke-DbaQuery -SqlInstance $sqlInstance -Query $sql -SqlCredential $SqlCredential
     }
 
     # Create the fullRestore and subset databases
     Write-Verbose "  Creating the fullRestore and subset databases"
-    if ($winAuth){
-        New-DbaDatabase -SqlInstance $sqlInstance -Name $sourceDb, $targetDb | Out-Null
-    }
-    else {
-        New-DbaDatabase -SqlInstance $sqlInstance -Name $sourceDb, $targetDb -SqlCredential $SqlCredential | Out-Null
-    }
+    New-DbaDatabase -SqlInstance $sqlInstance -Name $sourceDb, $targetDb -SqlCredential $SqlCredential | Out-Null
+    
     Write-Verbose "    Creating the $sourceDb database objects and data"
-    if ($winAuth){
-        Invoke-DbaQuery -SqlInstance $sqlInstance -Database $sourceDb -File $fullRestoreCreateScript | Out-Null
-    }
-    else {
-        Invoke-DbaQuery -SqlInstance $sqlInstance -Database $sourceDb -File $fullRestoreCreateScript -SqlCredential $SqlCredential | Out-Null
-    }
+    Invoke-DbaQuery -SqlInstance $sqlInstance -Database $sourceDb -File $fullRestoreCreateScript -SqlCredential $SqlCredential | Out-Null
+    
     Write-Verbose "    Creating the $targetDb database objects"
-    if ($winAuth){
-        Invoke-DbaQuery -SqlInstance $sqlInstance -Database $targetDb -File $subsetCreateScript | Out-Null
-    }
-    else {
-        Invoke-DbaQuery -SqlInstance $sqlInstance -Database $targetDb -File $subsetCreateScript -SqlCredential $SqlCredential | Out-Null
-    }
+    Invoke-DbaQuery -SqlInstance $sqlInstance -Database $targetDb -File $subsetCreateScript -SqlCredential $SqlCredential | Out-Null
+    
     Write-Verbose "  Validating that the databases have been created correctly"
     $totalFullRestoreOrders = (Invoke-DbaQuery -SqlInstance $sqlInstance -Database $sourceDb -Query "SELECT COUNT (*) AS TotalOrders FROM dbo.Orders" -SqlCredential $SqlCredential).TotalOrders
-    $totalSubsetOrders = (Invoke-DbaQuery -SqlInstance $sqlInstance -Database $targetDb -Query "SELECT COUNT (*) AS TotalOrders FROM dbo.Orders" -SqlCredential $SqlCredential).TotalOrders
+    $totalSubsetOrders = (Invoke-DbaQuery -SqlInstance $sqlInstance -Database $targetDb -Query "SELECT COUNT (*) AS TotalOrders FROM dbo.Orders" -SqlCredential $SqlCredential).TotalOrders    
+    
     if ($totalFullRestoreOrders -ne 830){
         Write-Error "    There should be 830 rows in $sourceDb, but there are $totalFullRestoreOrders."
         return $false
@@ -116,14 +100,24 @@ Function New-SampleDatabases {
 # Export the function
 Export-ModuleMember -Function New-SampleDatabases
 
-Function Restore-DatabaseFromBackup {
+Function Restore-StagingDatabasesFromBackup {
     param (
-        [string]$ServerInstance = "localhost",
-        [string]$DatabaseName = "Northwind",
-        [string]$BackupFilePath = "C:\Program Files\Microsoft SQL Server\MSSQL15.MSSQLSERVER\MSSQL\Backup\SampleDB.bak"
+        [Parameter(Mandatory = $true)][boolean]$WinAuth,
+        [Parameter(Mandatory = $true)][string]$sqlInstance,
+        [Parameter(Mandatory = $true)][string]$sourceDb,
+        [Parameter(Mandatory = $true)][string]$targetDb,
+        [Parameter(Mandatory = $true)][string]$sourceBackupPath,
+        [PSCredential]$SqlCredential
     )
+    Restore-DbaDatabase -SqlInstance $sqlInstance -Path $sourceBackupPath -WithReplace -DatabaseName $sourceDb -DestinationFileSuffix "_FULLRESTORE" -ReplaceDbNameInFile -Confirm:$false -SqlCredential $SqlCredential | Out-Null
+    Set-DbaDbRecoveryModel -SqlInstance $sqlInstance -RecoveryModel Simple -Database $sourceDb -Confirm:$false -SqlCredential $SqlCredential | Out-Null
+    Restore-DbaDatabase -SqlInstance $sqlInstance -Path $sourceBackupPath -WithReplace -DatabaseName $targetDb -DestinationFileSuffix "_SUBSET" -ReplaceDbNameInFile -Confirm:$false -SqlCredential $SqlCredential | Out-Null
+    Set-DbaDbRecoveryModel -SqlInstance $sqlInstance -RecoveryModel Simple -Database $targetDb -Confirm:$false -SqlCredential $SqlCredential | Out-Null
+    
+    $sourceDbRecoveryModel = (Test-DbaDbRecoveryModel -SqlInstance $sqlInstance -Database $sourceDb -SqlCredential $SqlCredential ).ActualRecoveryModel
+    $targetDbRecoveryModel = (Test-DbaDbRecoveryModel -SqlInstance $sqlInstance -Database $targetDb -SqlCredential $SqlCredential ).ActualRecoveryModel
 
-    Write-Error "Implement this function"
+    return $true
 }
 # Export the function
-Export-ModuleMember -Function Restore-DatabaseFromBackup
+Export-ModuleMember -Function Restore-StagingDatabasesFromBackup

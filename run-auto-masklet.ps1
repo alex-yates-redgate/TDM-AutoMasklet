@@ -46,11 +46,13 @@ Write-Output "- fullRestoreCreateScript: $fullRestoreCreateScript"
 Write-Output "- subsetCreateScript:      $subsetCreateScript"
 Write-Output "- installTdmClisScript:    $installTdmClisScript"
 Write-Output "- helperFunctions:         $helperFunctions"
+Write-Output "- subsetterOptionsFile:    $subsetterOptionsFile"
 Write-Output "- Using Windows Auth:      $winAuth"
 Write-Output "- sourceConnectionString:  $sourceConnectionString"
 Write-Output "- targetConnectionString:  $targetConnectionString"
 Write-Output "- output:                  $output"
 Write-Output "- trustCert:               $trustCert"
+Write-Output "- backupPath:              $backupPath"
 Write-Output ""
 Write-Output "Initial setup:"
 
@@ -63,7 +65,7 @@ import-module $helperFunctions
 $requiredFunctions = @(
     "Install-Dbatools",
     "New-SampleDatabases",
-    "Restore-DatabaseFromBackup"
+    "Restore-StagingDatabasesFromBackup"
 )
 # Testing that all the required functions are available
 $requiredFunctions | ForEach-Object {
@@ -129,7 +131,16 @@ Write-Output ""
 
 # Building staging databases
 if ($backupPath) {
-    Write-Error "Using a backup file to build the source database is not yet supported. Please remove the -backupPath parameter and try again."
+    # Using the Restore-StagingDatabasesFromBackup function in helper-functions.psm1 to build source and target databases from an existing backup
+    Write-Output "  Building sample Northwind source and target databases."
+    $dbCreateSuccessful = Restore-StagingDatabasesFromBackup -WinAuth:$winAuth -sqlInstance:$sqlInstance -sourceDb:$sourceDb -targetDb:$targetDb -sourceBackupPath:$backupPath -SqlCredential:$SqlCredential
+    if ($dbCreateSuccessful){
+        Write-Output "    Source and target databases created successfully."
+    }
+    else {
+        Write-Error "    Error: Failed to create the source and target databases. Please review any errors above."
+        break
+    }
 }
 else {
     # Using the Build-SampleDatabases function in helper-functions.psm1, and provided sql create scripts, to build sample source and target databases
@@ -158,31 +169,35 @@ Write-Output "******************************************************************
 Write-Output "Observe:"
 Write-Output "There should now be two databases on the $sqlInstance server: $sourceDb and $targetDb"
 Write-Output "$sourceDb should contain some data"
-Write-Output "$targetDb should have an identical schema, but no data"
-Write-Output ""
-Write-Output "For example, you could run the following script in your prefered IDE:"
-Write-Output ""
-Write-Output "  USE $sourceDb"
-Write-Output "  --USE $targetDb -- Uncomment to run the same query on the target database"
-Write-Output "  "
-Write-Output "  SELECT COUNT (*) AS TotalOrders"
-Write-Output "  FROM   dbo.Orders;"
-Write-Output "  "
-Write-Output "  SELECT   TOP 20 o.OrderID AS 'o.OrderId' ,"
-Write-Output "                  o.CustomerID AS 'o.CustomerID' ,"
-Write-Output "                  o.ShipAddress AS 'o.ShipAddress' ,"
-Write-Output "                  o.ShipCity AS 'o.ShipCity' ,"
-Write-Output "                  c.Address AS 'c.Address' ,"
-Write-Output "                  c.City AS 'c.ShipCity'"
-Write-Output "  FROM     dbo.Customers c"
-Write-Output "           JOIN dbo.Orders o ON o.CustomerID = c.CustomerID"
-Write-Output "  ORDER BY o.OrderID ASC;"
+if ($backupPath){
+    Write-Output "$targetDb should be identical. In an ideal world, it would be schema identical, but empty of data."
+}
+else {
+    Write-Output "$targetDb should have an identical schema, but no data"
+    Write-Output ""
+    Write-Output "For example, you could run the following script in your prefered IDE:"
+    Write-Output ""
+    Write-Output "  USE $sourceDb"
+    Write-Output "  --USE $targetDb -- Uncomment to run the same query on the target database"
+    Write-Output "  "
+    Write-Output "  SELECT COUNT (*) AS TotalOrders"
+    Write-Output "  FROM   dbo.Orders;"
+    Write-Output "  "
+    Write-Output "  SELECT   TOP 20 o.OrderID AS 'o.OrderId' ,"
+    Write-Output "                  o.CustomerID AS 'o.CustomerID' ,"
+    Write-Output "                  o.ShipAddress AS 'o.ShipAddress' ,"
+    Write-Output "                  o.ShipCity AS 'o.ShipCity' ,"
+    Write-Output "                  c.Address AS 'c.Address' ,"
+    Write-Output "                  c.City AS 'c.ShipCity'"
+    Write-Output "  FROM     dbo.Customers c"
+    Write-Output "           JOIN dbo.Orders o ON o.CustomerID = c.CustomerID"
+    Write-Output "  ORDER BY o.OrderID ASC;"
+}
 Write-Output ""
 Write-Output "Next:"
 Write-Output "We will run the following rgsubset command to copy a subset of the data from $sourceDb to $targetDb."
 Write-Output "  rgsubset run --database-engine=sqlserver --source-connection-string=$sourceConnectionString --target-connection-string=$targetConnectionString --options-file `"$subsetterOptionsFile`" --target-database-write-mode Overwrite"
-Write-Output "The subset will include data from the $startingTable table, based on the filter clause $filterClause."
-Write-Output "It will also include any data from any other tables that are required to maintain referential integrity."
+Write-Output "The subset will include data from the $startingTable table, based on the options set here: $subsetterOptionsFile."
 Write-Output "*********************************************************************************************************"
 Write-Output ""
 
@@ -202,10 +217,7 @@ rgsubset run --database-engine=sqlserver --source-connection-string=$sourceConne
 Write-Output ""
 Write-Output "*********************************************************************************************************"
 Write-Output "Observe:"
-Write-Output "$targetDb should contain some data."
-Write-Output "Observe that the $startingTable table contains only data that meets the filter clause $filterClause."
-Write-Output "Observe that other tables contain data required to maintain referential integrity."
-Write-Output "You can see how much data has been included from for each table by reviewing the rgsubset output (above)."
+Write-Output "$targetDb should contain a subset of the data from $sourceDb."
 Write-Output ""
 Write-Output "Next:"
 Write-Output "We will run rganonymize classify to create a classification.json file, documenting the location of any PII:"
@@ -281,15 +293,13 @@ Write-Output ""
 Write-Output "*********************************************************************************************************"
 Write-Output "Observe:"
 Write-Output "The data in the $targetDb database should now be masked."
-Write-Output "Review the data in the _FullRestore and _Subset databases. Are you happy with the way they have been subsetted and masked?"
+Write-Output "Review the data in the $sourceDb and $targetDb databases. Are you happy with the way they have been subsetted and masked?"
 Write-Output "Things you may like to look out for:"
 Write-Output "  - Notes fields (e.g. Employees.Notes)"
-Write-Output "  - Dependencies (e.g. Orders.ShipAddress and Customers.Address, joined on the CustoemrID column in each table"
-Write-Output "  - Empty tables (e.g. the flyway_schema_history table)"
+Write-Output "  - Dependencies (e.g. If using the sample Northwind database, observer the Orders.ShipAddress and Customers.Address, joined on the CustoemrID column in each table"
 Write-Output ""
 Write-Output "Additional tasks:"
-Write-Output "To ensure that all the data you want/need gets included in the subset, review this documentation about using config files"
-Write-Output "  specify multiple starting tables with additional filter clauses, e.g. 'WHERE 1=1': "
+Write-Output "Review both rgsubset-options.json examples in ./helper_scripts, as well as this documentation about using options files:"
 Write-Output "  https://documentation.red-gate.com/testdatamanager/command-line-interface-cli/subsetting/subsetting-configuration/subsetting-configuration-file"
 Write-Output "To apply a more thorough mask on the notes fields, review this documentation, and configure this project to a Lorem Ipsum"
 Write-Output "  masking rule for any 'notes' fields:"

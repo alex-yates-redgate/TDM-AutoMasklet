@@ -212,7 +212,7 @@ if (-not $autoContinue){
 # running subset
 Write-Output ""
 Write-Output "Running rgsubset to copy a subset of the data from $sourceDb to $targetDb."
-rgsubset run --database-engine=sqlserver --source-connection-string=$sourceConnectionString --target-connection-string=$targetConnectionString --options-file="$subsetterOptionsFile" --target-database-write-mode Overwrite 2>&1 | Out-Host
+rgsubset run --database-engine=sqlserver --source-connection-string=$sourceConnectionString --target-connection-string=$targetConnectionString --options-file="$subsetterOptionsFile" --target-database-write-mode Overwrite
 
 
 Write-Output ""
@@ -235,7 +235,7 @@ if (-not $autoContinue){
 }
 
 Write-Output "Creating a classification.json file in $output"
-rganonymize classify --database-engine SqlServer --connection-string=$targetConnectionString --classification-file "$output\classification.json" --output-all-columns 2>&1
+rganonymize classify --database-engine SqlServer --connection-string=$targetConnectionString --classification-file "$output\classification.json" --output-all-columns
 
 Write-Output ""
 Write-Output "*********************************************************************************************************"
@@ -262,7 +262,7 @@ if (-not $autoContinue){
 }
 
 Write-Output "Creating a masking.json file based on contents of classification.json in $output"
-rganonymize map --classification-file="$output\classification.json" --masking-file="$output\masking.json" 2>&1
+rganonymize map --classification-file="$output\classification.json" --masking-file="$output\masking.json"
 
 Write-Output ""
 Write-Output "*********************************************************************************************************"
@@ -288,7 +288,7 @@ if (-not $autoContinue){
 }
 
 Write-Output "Masking target database, based on contents of masking.json file in $output"
-rganonymize mask --database-engine SqlServer --connection-string=$targetConnectionString --masking-file="$output\masking.json" 2>&1
+rganonymize mask --database-engine SqlServer --connection-string=$targetConnectionString --masking-file="$output\masking.json"
 
 Write-Output ""
 Write-Output "*********************************************************************************************************"

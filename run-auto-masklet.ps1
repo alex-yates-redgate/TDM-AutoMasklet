@@ -17,6 +17,11 @@ $fullRestoreCreateScript = "$PSScriptRoot/helper_scripts/CreateNorthwindFullRest
 $subsetCreateScript = "$PSScriptRoot/helper_scripts/CreateNorthwindSubset.sql"
 $installTdmClisScript = "$PSScriptRoot/helper_scripts/installTdmClis.ps1"
 $helperFunctions = "$PSScriptRoot/helper_scripts/helper-functions.psm1"
+$subsetterOptionsFile = "$PSScriptRoot\helper_scripts\rgsubset-options-northwind.json"
+if ($backupPath){
+    $subsetterOptionsFile = "$PSScriptRoot\helper_scripts\rgsubset-options-generic.json"
+}
+
 $winAuth = $true
 $sourceConnectionString = ""
 $targetConnectionString = ""
@@ -30,6 +35,7 @@ else {
     $sourceConnectionString = "server=$sqlInstance;database=$sourceDb;TrustServerCertificate=yes;User Id=$sqlUser;Password=$sqlPassword;"
     $targetConnectionString = "server=$sqlInstance;database=$targetDb;TrustServerCertificate=yes;User Id=$sqlUser;Password=$sqlPassword;"
 }
+
 
 Write-Output "Configuration:"
 Write-Output "- sqlInstance:             $sqlInstance"
@@ -174,7 +180,7 @@ Write-Output "  ORDER BY o.OrderID ASC;"
 Write-Output ""
 Write-Output "Next:"
 Write-Output "We will run the following rgsubset command to copy a subset of the data from $sourceDb to $targetDb."
-Write-Output "  rgsubset run --database-engine=sqlserver --source-connection-string=$sourceConnectionString --target-connection-string=$targetConnectionString --options-file `".\helper_scripts\rgsubset-options.json`" --target-database-write-mode Overwrite"
+Write-Output "  rgsubset run --database-engine=sqlserver --source-connection-string=$sourceConnectionString --target-connection-string=$targetConnectionString --options-file `"$subsetterOptionsFile`" --target-database-write-mode Overwrite"
 Write-Output "The subset will include data from the $startingTable table, based on the filter clause $filterClause."
 Write-Output "It will also include any data from any other tables that are required to maintain referential integrity."
 Write-Output "*********************************************************************************************************"
@@ -191,7 +197,7 @@ if (-not $autoContinue){
 # running subset
 Write-Output ""
 Write-Output "Running rgsubset to copy a subset of the data from $sourceDb to $targetDb."
-rgsubset run --database-engine=sqlserver --source-connection-string=$sourceConnectionString --target-connection-string=$targetConnectionString --options-file ".\helper_scripts\rgsubset-options.json" --target-database-write-mode Overwrite
+rgsubset run --database-engine=sqlserver --source-connection-string=$sourceConnectionString --target-connection-string=$targetConnectionString --options-file="$subsetterOptionsFile" --target-database-write-mode Overwrite
 
 Write-Output ""
 Write-Output "*********************************************************************************************************"

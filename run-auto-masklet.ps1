@@ -212,7 +212,7 @@ if (-not $autoContinue){
 # running subset
 Write-Output ""
 Write-Output "Running rgsubset to copy a subset of the data from $sourceDb to $targetDb."
-rgsubset run --database-engine=sqlserver --source-connection-string=$sourceConnectionString --target-connection-string=$targetConnectionString --options-file="$subsetterOptionsFile" --target-database-write-mode Overwrite 
+rgsubset run --database-engine=sqlserver --source-connection-string=$sourceConnectionString --target-connection-string=$targetConnectionString --options-file="$subsetterOptionsFile" --target-database-write-mode Overwrite 2>&1 | Out-Host
 
 
 Write-Output ""

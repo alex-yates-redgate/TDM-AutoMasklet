@@ -4,18 +4,19 @@ param (
     $sqlPassword = "",
     $output = "C:/temp/auto-masklet",
     $trustCert = $true,
+    $backupPath = "",
+    $databaseName = "Northwind",
     [switch]$autoContinue,
     [switch]$skipAuth
 )
 
 # Configuration
-$databaseName = "Northwind"
 $sourceDb = "${databaseName}_FullRestore"
 $targetDb = "${databaseName}_Subset"
 $fullRestoreCreateScript = "$PSScriptRoot/helper_scripts/CreateNorthwindFullRestore.sql"
 $subsetCreateScript = "$PSScriptRoot/helper_scripts/CreateNorthwindSubset.sql"
 $installTdmClisScript = "$PSScriptRoot/helper_scripts/installTdmClis.ps1"
-
+$helperFunctions = "$PSScriptRoot/helper_scripts/helper-functions.psm1"
 $winAuth = $true
 $sourceConnectionString = ""
 $targetConnectionString = ""
@@ -38,6 +39,7 @@ Write-Output "- targetDb:                $targetDb"
 Write-Output "- fullRestoreCreateScript: $fullRestoreCreateScript"
 Write-Output "- subsetCreateScript:      $subsetCreateScript"
 Write-Output "- installTdmClisScript:    $installTdmClisScript"
+Write-Output "- helperFunctions:         $helperFunctions"
 Write-Output "- Using Windows Auth:      $winAuth"
 Write-Output "- sourceConnectionString:  $sourceConnectionString"
 Write-Output "- targetConnectionString:  $targetConnectionString"
@@ -49,44 +51,19 @@ Write-Output "Initial setup:"
 # Unblocking all files in thi repo (typically required if code is downloaded as zip)
 Get-ChildItem -Path $PSScriptRoot -Recurse | Unblock-File
 
-# Installing and importing dbatools
-if (Get-InstalledModule | Where-Object {$_.Name -like "dbatools"}){
-    # dbatools already installed
-    Write-Output "  dbatools PowerShell Module is installed."
+# Importing helper functions
+Write-Output "  Importing helper functions"
+import-module $helperFunctions
+
+# Installing/importing dbatools
+Write-Output "  Installing dbatools"
+$dbatoolsInstalledSuccessfully = Install-Dbatools -autoContinue:$autoContinue -trustCert:$trustCert
+if ($dbatoolsInstalledSuccessfully){
+    Write-Output "    dbatools installed successfully"
 }
 else {
-    # dbatools not installed yet
-    Write-Output "  dbatools PowerShell Module is not installed"
-    Write-Output "    Installing dbatools (requires admin privileges)."
-
-    $currentPrincipal = New-Object Security.Principal.WindowsPrincipal([Security.Principal.WindowsIdentity]::GetCurrent())
-    $runningAsAdmin = $currentPrincipal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
-    if (-not $runningAsAdmin){
-        Write-Warning "    Script not running as admin. Please either install dbatools manually, or run this script as an administrator to enable installing PowerShell modules."
-        break
-    }
-    if ($autoContinue) {
-        install-module dbatools -Confirm:$False -Force
-    }
-    else {
-        install-module dbatools
-    }
-    
-}
-Write-Output "  Importing dbatools PowerShell module."
-
-import-module dbatools
-
-if ($trustCert){
-    Write-Warning "Note: For convenience, trustCert is set to true. This is not best practice. For more information about a more secure way to manage encryption/certificates, see this post by Chrissy LeMaire: https://blog.netnerds.net/2023/03/new-defaults-for-sql-server-connections-encryption-trust-certificate/"
-}
-if ($trustCert){
-    # Updating the dbatools configuration for this session only to trust server certificates and not encrypt connections
-    #   Note: This is not best practice. For more information about a more secure way to manage encyption/certificates, see this post by Chrissy LeMaire:
-    #   https://blog.netnerds.net/2023/03/new-defaults-for-sql-server-connections-encryption-trust-certificate/
-    Write-Output "    Updating dbatools configuration (for this session only) to trust server certificates, and not to encrypt connections."
-    Set-DbatoolsConfig -FullName sql.connection.trustcert -Value $true
-    Set-DbatoolsConfig -FullName sql.connection.encrypt -Value $false
+    Write-Error "    dbatools failed to install. Please review any errors above."
+    break
 }
 
 # Download/update rgsubset and rganonymize CLIs

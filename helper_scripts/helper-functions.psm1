@@ -46,19 +46,76 @@ Function Install-Dbatools {
 # Export the function
 Export-ModuleMember -Function Install-Dbatools
 
-Function Build-SampleDatabases {
+Function New-SampleDatabases {
     param (
-        [string]$ServerInstance = "localhost",
-        [string]$DatabaseName = "Northwind",
-        [string]$DataFilePath = "C:\Program Files\Microsoft SQL Server\MSSQL15.MSSQLSERVER\MSSQL\DATA\SampleDB.mdf",
-        [string]$LogFilePath = "C:\Program Files\Microsoft SQL Server\MSSQL15.MSSQLSERVER\MSSQL\DATA\SampleDB_log.ldf"
+        [Parameter(Mandatory = $true)][boolean]$WinAuth,
+        [Parameter(Mandatory = $true)][string]$sqlInstance,
+        [Parameter(Mandatory = $true)][string]$sourceDb,
+        [Parameter(Mandatory = $true)][string]$targetDb,
+        [Parameter(Mandatory = $true)][string]$fullRestoreCreateScript,
+        [Parameter(Mandatory = $true)][string]$subsetCreateScript,
+        [PSCredential]$SqlCredential
     )
 
-    Write-Error "Implement this function"
+    # If exists, drop the source and target databases
+    Write-Verbose "  If exists, dropping the source and target databases"
+    if ($winAuth){
+        $dbsToDelete = Get-DbaDatabase -SqlInstance $sqlInstance -Database $sourceDb,$targetDb
+    }
+    else {
+        $dbsToDelete = Get-DbaDatabase -SqlInstance $sqlInstance -Database $sourceDb,$targetDb -SqlCredential $SqlCredential
+    }
 
+    forEach ($db in $dbsToDelete.Name){
+        Write-Verbose "    Dropping database $db"
+        $sql = "ALTER DATABASE $db SET single_user WITH ROLLBACK IMMEDIATE; DROP DATABASE $db;"
+        if ($winAuth){
+            Invoke-DbaQuery -SqlInstance $sqlInstance -Query $sql
+        }
+        else {
+            Invoke-DbaQuery -SqlInstance $sqlInstance -Query $sql -SqlCredential $SqlCredential
+        }
+    }
+
+    # Create the fullRestore and subset databases
+    Write-Verbose "  Creating the fullRestore and subset databases"
+    if ($winAuth){
+        New-DbaDatabase -SqlInstance $sqlInstance -Name $sourceDb, $targetDb | Out-Null
+    }
+    else {
+        New-DbaDatabase -SqlInstance $sqlInstance -Name $sourceDb, $targetDb -SqlCredential $SqlCredential | Out-Null
+    }
+    Write-Verbose "    Creating the $sourceDb database objects and data"
+    if ($winAuth){
+        Invoke-DbaQuery -SqlInstance $sqlInstance -Database $sourceDb -File $fullRestoreCreateScript | Out-Null
+    }
+    else {
+        Invoke-DbaQuery -SqlInstance $sqlInstance -Database $sourceDb -File $fullRestoreCreateScript -SqlCredential $SqlCredential | Out-Null
+    }
+    Write-Verbose "    Creating the $targetDb database objects"
+    if ($winAuth){
+        Invoke-DbaQuery -SqlInstance $sqlInstance -Database $targetDb -File $subsetCreateScript | Out-Null
+    }
+    else {
+        Invoke-DbaQuery -SqlInstance $sqlInstance -Database $targetDb -File $subsetCreateScript -SqlCredential $SqlCredential | Out-Null
+    }
+    Write-Verbose "  Validating that the databases have been created correctly"
+    $totalFullRestoreOrders = (Invoke-DbaQuery -SqlInstance $sqlInstance -Database $sourceDb -Query "SELECT COUNT (*) AS TotalOrders FROM dbo.Orders" -SqlCredential $SqlCredential).TotalOrders
+    $totalSubsetOrders = (Invoke-DbaQuery -SqlInstance $sqlInstance -Database $targetDb -Query "SELECT COUNT (*) AS TotalOrders FROM dbo.Orders" -SqlCredential $SqlCredential).TotalOrders
+    if ($totalFullRestoreOrders -ne 830){
+        Write-Error "    There should be 830 rows in $sourceDb, but there are $totalFullRestoreOrders."
+        return $false
+    }
+    if ($totalSubsetOrders -ne 0){
+        Write-Error "    There should be 0 rows in $targetDb, but there are $totalSubsetOrders."
+        return $false
+    }
+    return $true
 }
+# Export the function
+Export-ModuleMember -Function New-SampleDatabases
 
-Function Build-DatabaseFromBackup {
+Function Restore-DatabaseFromBackup {
     param (
         [string]$ServerInstance = "localhost",
         [string]$DatabaseName = "Northwind",
@@ -67,3 +124,5 @@ Function Build-DatabaseFromBackup {
 
     Write-Error "Implement this function"
 }
+# Export the function
+Export-ModuleMember -Function Restore-DatabaseFromBackup

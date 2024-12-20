@@ -54,6 +54,21 @@ Get-ChildItem -Path $PSScriptRoot -Recurse | Unblock-File
 # Importing helper functions
 Write-Output "  Importing helper functions"
 import-module $helperFunctions
+$requiredFunctions = @(
+    "Install-Dbatools",
+    "New-SampleDatabases",
+    "Restore-DatabaseFromBackup"
+)
+# Testing that all the required functions are available
+$requiredFunctions | ForEach-Object {
+    if (-not (Get-Command $_ -ErrorAction SilentlyContinue)){
+        Write-Error "  Error: Required function $_ not found. Please review any errors above."
+        exit
+    }
+    else {
+        Write-Output "    $_ found."
+    }
+}
 
 # Installing/importing dbatools
 Write-Output "  Installing dbatools"
@@ -106,47 +121,21 @@ Write-Output "rganonymize version is:"
 rganonymize --version
 Write-Output ""
 
-# If exists, drop the source and target databases
-Write-Output "  If exists, dropping the source and target databases"
-if ($winAuth){
-    $dbsToDelete = Get-DbaDatabase -SqlInstance $sqlInstance -Database $sourceDb,$targetDb
+# Building staging databases
+if ($backupPath) {
+    Write-Error "Using a backup file to build the source database is not yet supported. Please remove the -backupPath parameter and try again."
 }
 else {
-    $dbsToDelete = Get-DbaDatabase -SqlInstance $sqlInstance -Database $sourceDb,$targetDb -SqlCredential $SqlCredential
-}
-
-forEach ($db in $dbsToDelete.Name){
-    Write-Output "    Dropping database $db"
-    $sql = "ALTER DATABASE $db SET single_user WITH ROLLBACK IMMEDIATE; DROP DATABASE $db;"
-    if ($winAuth){
-        Invoke-DbaQuery -SqlInstance $sqlInstance -Query $sql
+    # Using the Build-SampleDatabases function in helper-functions.psm1, and provided sql create scripts, to build sample source and target databases
+    Write-Output "  Building sample Northwind source and target databases."
+    $dbCreateSuccessful = New-SampleDatabases -WinAuth:$winAuth -sqlInstance:$sqlInstance -sourceDb:$sourceDb -targetDb:$targetDb -fullRestoreCreateScript:$fullRestoreCreateScript -subsetCreateScript:$subsetCreateScript -SqlCredential:$SqlCredential
+    if ($dbCreateSuccessful){
+        Write-Output "    Source and target databases created successfully."
     }
     else {
-        Invoke-DbaQuery -SqlInstance $sqlInstance -Query $sql -SqlCredential $SqlCredential
+        Write-Error "    Error: Failed to create the source and target databases. Please review any errors above."
+        break
     }
-}
-
-# Create the fullRestore and subset databases
-Write-Output "  Creating the fullRestore and subset databases"
-if ($winAuth){
-    New-DbaDatabase -SqlInstance $sqlInstance -Name $sourceDb, $targetDb | Out-Null
-}
-else {
-    New-DbaDatabase -SqlInstance $sqlInstance -Name $sourceDb, $targetDb -SqlCredential $SqlCredential | Out-Null
-}
-Write-Output "    Creating the $sourceDb database objects and data"
-if ($winAuth){
-    Invoke-DbaQuery -SqlInstance $sqlInstance -Database $sourceDb -File $fullRestoreCreateScript | Out-Null
-}
-else {
-    Invoke-DbaQuery -SqlInstance $sqlInstance -Database $sourceDb -File $fullRestoreCreateScript -SqlCredential $SqlCredential | Out-Null
-}
-Write-Output "    Creating the $targetDb database objects"
-if ($winAuth){
-    Invoke-DbaQuery -SqlInstance $sqlInstance -Database $targetDb -File $subsetCreateScript | Out-Null
-}
-else {
-    Invoke-DbaQuery -SqlInstance $sqlInstance -Database $targetDb -File $subsetCreateScript -SqlCredential $SqlCredential | Out-Null
 }
 
 # Clean output directory

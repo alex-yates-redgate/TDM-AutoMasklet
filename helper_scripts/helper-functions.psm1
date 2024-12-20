@@ -42,6 +42,7 @@ Function Install-Dbatools {
         Set-DbatoolsConfig -FullName sql.connection.trustcert -Value $true
         Set-DbatoolsConfig -FullName sql.connection.encrypt -Value $false
     }
+    return $true
 }
 # Export the function
 Export-ModuleMember -Function Install-Dbatools

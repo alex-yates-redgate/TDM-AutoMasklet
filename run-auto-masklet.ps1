@@ -4,17 +4,20 @@ param (
     $sqlPassword = "",
     $output = "C:/temp/auto-masklet",
     $trustCert = $true,
+    $backupPath = "",
+    $databaseName = "Northwind",
     [switch]$autoContinue,
     [switch]$skipAuth
 )
 
 # Configuration
-$databaseName = "Northwind"
 $sourceDb = "${databaseName}_FullRestore"
 $targetDb = "${databaseName}_Subset"
 $fullRestoreCreateScript = "$PSScriptRoot/helper_scripts/CreateNorthwindFullRestore.sql"
 $subsetCreateScript = "$PSScriptRoot/helper_scripts/CreateNorthwindSubset.sql"
 $installTdmClisScript = "$PSScriptRoot/helper_scripts/installTdmClis.ps1"
+$helperFunctions = "$PSScriptRoot/helper_scripts/helper-functions.psm1"
+$subsetterOptionsFile = "$PSScriptRoot\helper_scripts\rgsubset-options-northwind.json"
 
 $winAuth = $true
 $sourceConnectionString = ""
@@ -30,6 +33,7 @@ else {
     $targetConnectionString = "server=$sqlInstance;database=$targetDb;TrustServerCertificate=yes;User Id=$sqlUser;Password=$sqlPassword;"
 }
 
+
 Write-Output "Configuration:"
 Write-Output "- sqlInstance:             $sqlInstance"
 Write-Output "- databaseName:            $databaseName"
@@ -38,55 +42,48 @@ Write-Output "- targetDb:                $targetDb"
 Write-Output "- fullRestoreCreateScript: $fullRestoreCreateScript"
 Write-Output "- subsetCreateScript:      $subsetCreateScript"
 Write-Output "- installTdmClisScript:    $installTdmClisScript"
+Write-Output "- helperFunctions:         $helperFunctions"
+Write-Output "- subsetterOptionsFile:    $subsetterOptionsFile"
 Write-Output "- Using Windows Auth:      $winAuth"
 Write-Output "- sourceConnectionString:  $sourceConnectionString"
 Write-Output "- targetConnectionString:  $targetConnectionString"
 Write-Output "- output:                  $output"
 Write-Output "- trustCert:               $trustCert"
+Write-Output "- backupPath:              $backupPath"
 Write-Output ""
 Write-Output "Initial setup:"
 
 # Unblocking all files in thi repo (typically required if code is downloaded as zip)
 Get-ChildItem -Path $PSScriptRoot -Recurse | Unblock-File
 
-# Installing and importing dbatools
-if (Get-InstalledModule | Where-Object {$_.Name -like "dbatools"}){
-    # dbatools already installed
-    Write-Output "  dbatools PowerShell Module is installed."
-}
-else {
-    # dbatools not installed yet
-    Write-Output "  dbatools PowerShell Module is not installed"
-    Write-Output "    Installing dbatools (requires admin privileges)."
-
-    $currentPrincipal = New-Object Security.Principal.WindowsPrincipal([Security.Principal.WindowsIdentity]::GetCurrent())
-    $runningAsAdmin = $currentPrincipal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
-    if (-not $runningAsAdmin){
-        Write-Warning "    Script not running as admin. Please either install dbatools manually, or run this script as an administrator to enable installing PowerShell modules."
-        break
-    }
-    if ($autoContinue) {
-        install-module dbatools -Confirm:$False -Force
+# Importing helper functions
+Write-Output "  Importing helper functions"
+import-module $helperFunctions
+$requiredFunctions = @(
+    "Install-Dbatools",
+    "New-SampleDatabases",
+    "Restore-StagingDatabasesFromBackup"
+)
+# Testing that all the required functions are available
+$requiredFunctions | ForEach-Object {
+    if (-not (Get-Command $_ -ErrorAction SilentlyContinue)){
+        Write-Error "  Error: Required function $_ not found. Please review any errors above."
+        exit
     }
     else {
-        install-module dbatools
+        Write-Output "    $_ found."
     }
-    
 }
-Write-Output "  Importing dbatools PowerShell module."
 
-import-module dbatools
-
-if ($trustCert){
-    Write-Warning "Note: For convenience, trustCert is set to true. This is not best practice. For more information about a more secure way to manage encryption/certificates, see this post by Chrissy LeMaire: https://blog.netnerds.net/2023/03/new-defaults-for-sql-server-connections-encryption-trust-certificate/"
+# Installing/importing dbatools
+Write-Output "  Installing dbatools"
+$dbatoolsInstalledSuccessfully = Install-Dbatools -autoContinue:$autoContinue -trustCert:$trustCert
+if ($dbatoolsInstalledSuccessfully){
+    Write-Output "    dbatools installed successfully"
 }
-if ($trustCert){
-    # Updating the dbatools configuration for this session only to trust server certificates and not encrypt connections
-    #   Note: This is not best practice. For more information about a more secure way to manage encyption/certificates, see this post by Chrissy LeMaire:
-    #   https://blog.netnerds.net/2023/03/new-defaults-for-sql-server-connections-encryption-trust-certificate/
-    Write-Output "    Updating dbatools configuration (for this session only) to trust server certificates, and not to encrypt connections."
-    Set-DbatoolsConfig -FullName sql.connection.trustcert -Value $true
-    Set-DbatoolsConfig -FullName sql.connection.encrypt -Value $false
+else {
+    Write-Error "    dbatools failed to install. Please review any errors above."
+    break
 }
 
 # Download/update rgsubset and rganonymize CLIs
@@ -129,47 +126,30 @@ Write-Output "rganonymize version is:"
 rganonymize --version
 Write-Output ""
 
-# If exists, drop the source and target databases
-Write-Output "  If exists, dropping the source and target databases"
-if ($winAuth){
-    $dbsToDelete = Get-DbaDatabase -SqlInstance $sqlInstance -Database $sourceDb,$targetDb
-}
-else {
-    $dbsToDelete = Get-DbaDatabase -SqlInstance $sqlInstance -Database $sourceDb,$targetDb -SqlCredential $SqlCredential
-}
-
-forEach ($db in $dbsToDelete.Name){
-    Write-Output "    Dropping database $db"
-    $sql = "ALTER DATABASE $db SET single_user WITH ROLLBACK IMMEDIATE; DROP DATABASE $db;"
-    if ($winAuth){
-        Invoke-DbaQuery -SqlInstance $sqlInstance -Query $sql
+# Building staging databases
+if ($backupPath) {
+    # Using the Restore-StagingDatabasesFromBackup function in helper-functions.psm1 to build source and target databases from an existing backup
+    Write-Output "  Building $sourceDb and $targetDb databases from backup file saved at $BackupPath."
+    $dbCreateSuccessful = Restore-StagingDatabasesFromBackup -WinAuth:$winAuth -sqlInstance:$sqlInstance -sourceDb:$sourceDb -targetDb:$targetDb -sourceBackupPath:$backupPath -SqlCredential:$SqlCredential
+    if ($dbCreateSuccessful){
+        Write-Output "    Source and target databases created successfully."
     }
     else {
-        Invoke-DbaQuery -SqlInstance $sqlInstance -Query $sql -SqlCredential $SqlCredential
+        Write-Error "    Error: Failed to create the source and target databases. Please review any errors above."
+        break
     }
 }
-
-# Create the fullRestore and subset databases
-Write-Output "  Creating the fullRestore and subset databases"
-if ($winAuth){
-    New-DbaDatabase -SqlInstance $sqlInstance -Name $sourceDb, $targetDb | Out-Null
-}
 else {
-    New-DbaDatabase -SqlInstance $sqlInstance -Name $sourceDb, $targetDb -SqlCredential $SqlCredential | Out-Null
-}
-Write-Output "    Creating the $sourceDb database objects and data"
-if ($winAuth){
-    Invoke-DbaQuery -SqlInstance $sqlInstance -Database $sourceDb -File $fullRestoreCreateScript | Out-Null
-}
-else {
-    Invoke-DbaQuery -SqlInstance $sqlInstance -Database $sourceDb -File $fullRestoreCreateScript -SqlCredential $SqlCredential | Out-Null
-}
-Write-Output "    Creating the $targetDb database objects"
-if ($winAuth){
-    Invoke-DbaQuery -SqlInstance $sqlInstance -Database $targetDb -File $subsetCreateScript | Out-Null
-}
-else {
-    Invoke-DbaQuery -SqlInstance $sqlInstance -Database $targetDb -File $subsetCreateScript -SqlCredential $SqlCredential | Out-Null
+    # Using the Build-SampleDatabases function in helper-functions.psm1, and provided sql create scripts, to build sample source and target databases
+    Write-Output "  Building sample Northwind source and target databases."
+    $dbCreateSuccessful = New-SampleDatabases -WinAuth:$winAuth -sqlInstance:$sqlInstance -sourceDb:$sourceDb -targetDb:$targetDb -fullRestoreCreateScript:$fullRestoreCreateScript -subsetCreateScript:$subsetCreateScript -SqlCredential:$SqlCredential
+    if ($dbCreateSuccessful){
+        Write-Output "    Source and target databases created successfully."
+    }
+    else {
+        Write-Error "    Error: Failed to create the source and target databases. Please review any errors above."
+        break
+    }
 }
 
 # Clean output directory
@@ -186,31 +166,40 @@ Write-Output "******************************************************************
 Write-Output "Observe:"
 Write-Output "There should now be two databases on the $sqlInstance server: $sourceDb and $targetDb"
 Write-Output "$sourceDb should contain some data"
-Write-Output "$targetDb should have an identical schema, but no data"
-Write-Output ""
-Write-Output "For example, you could run the following script in your prefered IDE:"
-Write-Output ""
-Write-Output "  USE $sourceDb"
-Write-Output "  --USE $targetDb -- Uncomment to run the same query on the target database"
-Write-Output "  "
-Write-Output "  SELECT COUNT (*) AS TotalOrders"
-Write-Output "  FROM   dbo.Orders;"
-Write-Output "  "
-Write-Output "  SELECT   TOP 20 o.OrderID AS 'o.OrderId' ,"
-Write-Output "                  o.CustomerID AS 'o.CustomerID' ,"
-Write-Output "                  o.ShipAddress AS 'o.ShipAddress' ,"
-Write-Output "                  o.ShipCity AS 'o.ShipCity' ,"
-Write-Output "                  c.Address AS 'c.Address' ,"
-Write-Output "                  c.City AS 'c.ShipCity'"
-Write-Output "  FROM     dbo.Customers c"
-Write-Output "           JOIN dbo.Orders o ON o.CustomerID = c.CustomerID"
-Write-Output "  ORDER BY o.OrderID ASC;"
+if ($backupPath){
+    Write-Output "$targetDb should be identical. In an ideal world, it would be schema identical, but empty of data."
+}
+else {
+    Write-Output "$targetDb should have an identical schema, but no data"
+    Write-Output ""
+    Write-Output "For example, you could run the following script in your prefered IDE:"
+    Write-Output ""
+    Write-Output "  USE $sourceDb"
+    Write-Output "  --USE $targetDb -- Uncomment to run the same query on the target database"
+    Write-Output "  "
+    Write-Output "  SELECT COUNT (*) AS TotalOrders"
+    Write-Output "  FROM   dbo.Orders;"
+    Write-Output "  "
+    Write-Output "  SELECT   TOP 20 o.OrderID AS 'o.OrderId' ,"
+    Write-Output "                  o.CustomerID AS 'o.CustomerID' ,"
+    Write-Output "                  o.ShipAddress AS 'o.ShipAddress' ,"
+    Write-Output "                  o.ShipCity AS 'o.ShipCity' ,"
+    Write-Output "                  c.Address AS 'c.Address' ,"
+    Write-Output "                  c.City AS 'c.ShipCity'"
+    Write-Output "  FROM     dbo.Customers c"
+    Write-Output "           JOIN dbo.Orders o ON o.CustomerID = c.CustomerID"
+    Write-Output "  ORDER BY o.OrderID ASC;"
+}
 Write-Output ""
 Write-Output "Next:"
 Write-Output "We will run the following rgsubset command to copy a subset of the data from $sourceDb to $targetDb."
-Write-Output "  rgsubset run --database-engine=sqlserver --source-connection-string=$sourceConnectionString --target-connection-string=$targetConnectionString --options-file `".\helper_scripts\rgsubset-options.json`" --target-database-write-mode Overwrite"
-Write-Output "The subset will include data from the $startingTable table, based on the filter clause $filterClause."
-Write-Output "It will also include any data from any other tables that are required to maintain referential integrity."
+if ($backupPath){
+    Write-Output "  rgsubset run --database-engine=sqlserver --source-connection-string=$sourceConnectionString --target-connection-string=$targetConnectionString --target-database-write-mode Overwrite"
+}
+else {
+    Write-Output "  rgsubset run --database-engine=sqlserver --source-connection-string=$sourceConnectionString --target-connection-string=$targetConnectionString --options-file `"$subsetterOptionsFile`" --target-database-write-mode Overwrite"
+    Write-Output "The subset will include data from the starting table, based on the options set here: $subsetterOptionsFile."
+}
 Write-Output "*********************************************************************************************************"
 Write-Output ""
 
@@ -225,15 +214,18 @@ if (-not $autoContinue){
 # running subset
 Write-Output ""
 Write-Output "Running rgsubset to copy a subset of the data from $sourceDb to $targetDb."
-rgsubset run --database-engine=sqlserver --source-connection-string=$sourceConnectionString --target-connection-string=$targetConnectionString --options-file ".\helper_scripts\rgsubset-options.json" --target-database-write-mode Overwrite
+if ($backupPath){
+    rgsubset run --database-engine=sqlserver --source-connection-string=$sourceConnectionString --target-connection-string=$targetConnectionString --target-database-write-mode Overwrite
+}
+else {
+    rgsubset run --database-engine=sqlserver --source-connection-string=$sourceConnectionString --target-connection-string=$targetConnectionString --options-file="$subsetterOptionsFile" --target-database-write-mode Overwrite
+}
+
 
 Write-Output ""
 Write-Output "*********************************************************************************************************"
 Write-Output "Observe:"
-Write-Output "$targetDb should contain some data."
-Write-Output "Observe that the $startingTable table contains only data that meets the filter clause $filterClause."
-Write-Output "Observe that other tables contain data required to maintain referential integrity."
-Write-Output "You can see how much data has been included from for each table by reviewing the rgsubset output (above)."
+Write-Output "$targetDb should contain a subset of the data from $sourceDb."
 Write-Output ""
 Write-Output "Next:"
 Write-Output "We will run rganonymize classify to create a classification.json file, documenting the location of any PII:"
@@ -250,7 +242,7 @@ if (-not $autoContinue){
 }
 
 Write-Output "Creating a classification.json file in $output"
-rganonymize classify --database-engine SqlServer --connection-string=$targetConnectionString --classification-file "$output\classification.json" --output-all-columns 
+rganonymize classify --database-engine SqlServer --connection-string=$targetConnectionString --classification-file "$output\classification.json" --output-all-columns
 
 Write-Output ""
 Write-Output "*********************************************************************************************************"
@@ -277,7 +269,7 @@ if (-not $autoContinue){
 }
 
 Write-Output "Creating a masking.json file based on contents of classification.json in $output"
-rganonymize map --classification-file="$output\classification.json" --masking-file="$output\masking.json" 
+rganonymize map --classification-file="$output\classification.json" --masking-file="$output\masking.json"
 
 Write-Output ""
 Write-Output "*********************************************************************************************************"
@@ -303,21 +295,19 @@ if (-not $autoContinue){
 }
 
 Write-Output "Masking target database, based on contents of masking.json file in $output"
-rganonymize mask --database-engine SqlServer --connection-string=$targetConnectionString --masking-file="$output\masking.json" 
+rganonymize mask --database-engine SqlServer --connection-string=$targetConnectionString --masking-file="$output\masking.json"
 
 Write-Output ""
 Write-Output "*********************************************************************************************************"
 Write-Output "Observe:"
 Write-Output "The data in the $targetDb database should now be masked."
-Write-Output "Review the data in the _FullRestore and _Subset databases. Are you happy with the way they have been subsetted and masked?"
+Write-Output "Review the data in the $sourceDb and $targetDb databases. Are you happy with the way they have been subsetted and masked?"
 Write-Output "Things you may like to look out for:"
 Write-Output "  - Notes fields (e.g. Employees.Notes)"
-Write-Output "  - Dependencies (e.g. Orders.ShipAddress and Customers.Address, joined on the CustoemrID column in each table"
-Write-Output "  - Empty tables (e.g. the flyway_schema_history table)"
+Write-Output "  - Dependencies (e.g. If using the sample Northwind database, observer the Orders.ShipAddress and Customers.Address, joined on the CustoemrID column in each table"
 Write-Output ""
 Write-Output "Additional tasks:"
-Write-Output "To ensure that all the data you want/need gets included in the subset, review this documentation about using config files"
-Write-Output "  specify multiple starting tables with additional filter clauses, e.g. 'WHERE 1=1': "
+Write-Output "Review both rgsubset-options.json examples in ./helper_scripts, as well as this documentation about using options files:"
 Write-Output "  https://documentation.red-gate.com/testdatamanager/command-line-interface-cli/subsetting/subsetting-configuration/subsetting-configuration-file"
 Write-Output "To apply a more thorough mask on the notes fields, review this documentation, and configure this project to a Lorem Ipsum"
 Write-Output "  masking rule for any 'notes' fields:"

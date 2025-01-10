@@ -18,9 +18,6 @@ $subsetCreateScript = "$PSScriptRoot/helper_scripts/CreateNorthwindSubset.sql"
 $installTdmClisScript = "$PSScriptRoot/helper_scripts/installTdmClis.ps1"
 $helperFunctions = "$PSScriptRoot/helper_scripts/helper-functions.psm1"
 $subsetterOptionsFile = "$PSScriptRoot\helper_scripts\rgsubset-options-northwind.json"
-if ($backupPath){
-    $subsetterOptionsFile = "$PSScriptRoot\helper_scripts\rgsubset-options-generic.json"
-}
 
 $winAuth = $true
 $sourceConnectionString = ""
@@ -196,8 +193,13 @@ else {
 Write-Output ""
 Write-Output "Next:"
 Write-Output "We will run the following rgsubset command to copy a subset of the data from $sourceDb to $targetDb."
-Write-Output "  rgsubset run --database-engine=sqlserver --source-connection-string=$sourceConnectionString --target-connection-string=$targetConnectionString --options-file `"$subsetterOptionsFile`" --target-database-write-mode Overwrite"
-Write-Output "The subset will include data from the $startingTable table, based on the options set here: $subsetterOptionsFile."
+if ($backupPath){
+    Write-Output "  rgsubset run --database-engine=sqlserver --source-connection-string=$sourceConnectionString --target-connection-string=$targetConnectionString --target-database-write-mode Overwrite"
+}
+else {
+    Write-Output "  rgsubset run --database-engine=sqlserver --source-connection-string=$sourceConnectionString --target-connection-string=$targetConnectionString --options-file `"$subsetterOptionsFile`" --target-database-write-mode Overwrite"
+    Write-Output "The subset will include data from the starting table, based on the options set here: $subsetterOptionsFile."
+}
 Write-Output "*********************************************************************************************************"
 Write-Output ""
 
@@ -212,7 +214,12 @@ if (-not $autoContinue){
 # running subset
 Write-Output ""
 Write-Output "Running rgsubset to copy a subset of the data from $sourceDb to $targetDb."
-rgsubset run --database-engine=sqlserver --source-connection-string=$sourceConnectionString --target-connection-string=$targetConnectionString --options-file="$subsetterOptionsFile" --target-database-write-mode Overwrite
+if ($backupPath){
+    rgsubset run --database-engine=sqlserver --source-connection-string=$sourceConnectionString --target-connection-string=$targetConnectionString --target-database-write-mode Overwrite
+}
+else {
+    rgsubset run --database-engine=sqlserver --source-connection-string=$sourceConnectionString --target-connection-string=$targetConnectionString --options-file="$subsetterOptionsFile" --target-database-write-mode Overwrite
+}
 
 
 Write-Output ""

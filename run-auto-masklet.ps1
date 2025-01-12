@@ -215,15 +215,8 @@ Write-Output "It will also include any data from any other tables that are requi
 Write-Output "*********************************************************************************************************"
 Write-Output ""
 
- & $PromptContinue
-Write-Host "About to call the script"
 & $PromptContinue 
 
-if ($?) { 
-    Write-Host "Script ran successfully."
-} else {
-    Write-Host "Error running script: $($Error[0])"
-}
 
 # running subset
 Write-Output ""

@@ -15,6 +15,7 @@ $targetDb = "${databaseName}_Subset"
 $fullRestoreCreateScript = "$PSScriptRoot/helper_scripts/CreateNorthwindFullRestore.sql"
 $subsetCreateScript = "$PSScriptRoot/helper_scripts/CreateNorthwindSubset.sql"
 $installTdmClisScript = "$PSScriptRoot/helper_scripts/installTdmClis.ps1"
+$PromptContinue = "$PSScriptRoot/helper_scripts/PromptContinue.ps1"
 
 $winAuth = $true
 $sourceConnectionString = ""
@@ -214,12 +215,14 @@ Write-Output "It will also include any data from any other tables that are requi
 Write-Output "*********************************************************************************************************"
 Write-Output ""
 
-if (-not $autoContinue){
-    $continue = Read-Host "Continue? (y/n)"
-    if ($continue -notlike "y"){
-        Write-output 'Response not like "y". Teminating script.'
-        break
-    }
+ & $PromptContinue
+Write-Host "About to call the script"
+& $PromptContinue 
+
+if ($?) { 
+    Write-Host "Script ran successfully."
+} else {
+    Write-Host "Error running script: $($Error[0])"
 }
 
 # running subset
@@ -241,13 +244,7 @@ Write-Output "  rganonymize classify --database-engine SqlServer --connection-st
 Write-Output "*********************************************************************************************************"
 Write-Output ""
 
-if (-not $autoContinue){
-    $continue = Read-Host "Continue? (y/n)"
-    if ($continue -notlike "y"){
-        Write-output 'Response not like "y". Teminating script.'
-        break
-    }
-}
+& $PromptContinue
 
 Write-Output "Creating a classification.json file in $output"
 rganonymize classify --database-engine SqlServer --connection-string=$targetConnectionString --classification-file "$output\classification.json" --output-all-columns 
@@ -268,13 +265,7 @@ Write-Output "  rganonymize map --classification-file `"$output\classification.j
 Write-Output "*********************************************************************************************************"
 Write-Output ""
 
-if (-not $autoContinue){
-    $continue = Read-Host "Continue? (y/n)"
-    if ($continue -notlike "y"){
-        Write-output 'Response not like "y". Teminating script.'
-        break
-    }
-}
+& $PromptContinue
 
 Write-Output "Creating a masking.json file based on contents of classification.json in $output"
 rganonymize map --classification-file="$output\classification.json" --masking-file="$output\masking.json" 
@@ -294,13 +285,7 @@ Write-Output "  rganonymize mask --database-engine SqlServer --connection-string
 Write-Output "*********************************************************************************************************"
 Write-Output ""
 
-if (-not $autoContinue){
-    $continue = Read-Host "Continue? (y/n)"
-    if ($continue -notlike "y"){
-        Write-output 'Response not like "y". Teminating script.'
-        break
-    }
-}
+& $PromptContinue
 
 Write-Output "Masking target database, based on contents of masking.json file in $output"
 rganonymize mask --database-engine SqlServer --connection-string=$targetConnectionString --masking-file="$output\masking.json" 

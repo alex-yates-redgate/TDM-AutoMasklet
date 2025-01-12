@@ -5,7 +5,7 @@ function Prompt-Continue {
 
     if (-not $AutoContinue) {
         while ($true) {
-            $continue = Read-Host "Continue Marko Test? (y/n)"
+            $continue = Read-Host "Continue Test? (y/n)"
             if ($continue -eq 'y') {
                 Write-Output 'You chose to continue.'
                 break  # Exit the loop and proceed

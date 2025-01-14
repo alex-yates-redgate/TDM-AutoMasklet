@@ -1,4 +1,5 @@
 {
+  "jsonSchemaVersion": 1,
   "startingTables": [
     { 
       "table":

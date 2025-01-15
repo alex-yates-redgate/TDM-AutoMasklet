@@ -2,6 +2,8 @@ name: mssql2019-posh7
 
 on:
   push:
+    pull_request:    # Run on pull requests
+      types: [opened, synchronize, reopened]
     branches:
       - '**'             # Run on all branches
   schedule:

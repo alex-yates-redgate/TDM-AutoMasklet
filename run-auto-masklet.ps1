@@ -7,7 +7,8 @@ param (
     $backupPath = "",
     $databaseName = "Northwind",
     [switch]$autoContinue,
-    [switch]$skipAuth
+    [switch]$skipAuth,
+    [switch]$noRestore
 )
 
 # Configuration
@@ -50,6 +51,7 @@ Write-Output "- targetConnectionString:  $targetConnectionString"
 Write-Output "- output:                  $output"
 Write-Output "- trustCert:               $trustCert"
 Write-Output "- backupPath:              $backupPath"
+Write-Output "- noRestore:               $noRestore"
 Write-Output ""
 Write-Output "Initial setup:"
 
@@ -126,8 +128,16 @@ Write-Output "rganonymize version is:"
 rganonymize --version
 Write-Output ""
 
-# Building staging databases
-if ($backupPath) {
+# Skipping restore, user has created databases
+if ($noRestore){
+    Write-Output "*********************************************************************************************************"
+    Write-Output "Skipping database restore and creation."
+    Write-Output "Please ensure that the source and target databases are already created and available on the $sqlInstance server."
+    Write-Output "*********************************************************************************************************"
+}
+else {
+    # Building staging databases
+  if ($backupPath) {
     # Using the Restore-StagingDatabasesFromBackup function in helper-functions.psm1 to build source and target databases from an existing backup
     Write-Output "  Building $sourceDb and $targetDb databases from backup file saved at $BackupPath."
     $dbCreateSuccessful = Restore-StagingDatabasesFromBackup -WinAuth:$winAuth -sqlInstance:$sqlInstance -sourceDb:$sourceDb -targetDb:$targetDb -sourceBackupPath:$backupPath -SqlCredential:$SqlCredential
@@ -138,8 +148,8 @@ if ($backupPath) {
         Write-Error "    Error: Failed to create the source and target databases. Please review any errors above."
         break
     }
-}
-else {
+  }
+  else {
     # Using the Build-SampleDatabases function in helper-functions.psm1, and provided sql create scripts, to build sample source and target databases
     Write-Output "  Building sample Northwind source and target databases."
     $dbCreateSuccessful = New-SampleDatabases -WinAuth:$winAuth -sqlInstance:$sqlInstance -sourceDb:$sourceDb -targetDb:$targetDb -fullRestoreCreateScript:$fullRestoreCreateScript -subsetCreateScript:$subsetCreateScript -SqlCredential:$SqlCredential
@@ -150,6 +160,7 @@ else {
         Write-Error "    Error: Failed to create the source and target databases. Please review any errors above."
         break
     }
+  }
 }
 
 # Clean output directory

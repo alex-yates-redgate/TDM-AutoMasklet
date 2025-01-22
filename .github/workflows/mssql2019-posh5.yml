@@ -13,11 +13,6 @@ jobs:
     runs-on: windows-latest
     name: run_masklet_psh5
 
-    # Ensure only one run per branch at a time
-    concurrency:        
-      group: ${{ github.ref }}
-      cancel-in-progress: true
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v3

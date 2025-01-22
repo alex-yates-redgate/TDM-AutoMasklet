@@ -17,9 +17,6 @@ jobs:
     runs-on: windows-latest
     name: run_masklet_psh5
 
-    # Prevent duplicate runs for pushes that are part of a pull request
-    if: github.event_name != 'push' || github.base_ref == ''
-
     # Ensure only one run per branch at a time
     concurrency:        
       group: ${{ github.ref }}

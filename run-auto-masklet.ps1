@@ -207,7 +207,7 @@ Write-Output ""
 
 function Prompt-Continue {
     param (
-        [bool]$autoContinue = $false
+        [bool]$autoContinue = $true
     )
 
     if ($autoContinue) {

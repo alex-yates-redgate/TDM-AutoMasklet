@@ -203,16 +203,30 @@ else {
 Write-Output "*********************************************************************************************************"
 Write-Output ""
 
-if (-not $autoContinue) {
-    $continue = Read-Host "Continue? (y/n)"
-    if ($continue -eq "n") {
-        Write-Output 'User chose "n". Terminating script.'
-        break
-    } elseif ($continue -ne "y") {
-        Write-Output 'Invalid response. Please enter "y" or "n".'
+# Creating the function for Y/N prompt
+
+function Prompt-Continue {
+    param (
+        [bool]$autoContinue = $false
+    )
+
+    $continueLoop = $true
+
+    while ($continueLoop) {
+        if (-not $autoContinue) {
+            $continue = Read-Host "Continue? (y/n)"
+            switch ($continue.ToLower()) {
+                "y" { Write-Output 'User chose to continue.'; $continueLoop = $false }
+                "n" { Write-Output 'User chose "n". Terminating script.'; exit }
+                default { Write-Output 'Invalid response. Please enter "y" or "n".' }
+            }
+        } else {
+            $continueLoop = $false
+        }
     }
 }
 
+Prompt-Continue
 
 # running subset
 Write-Output ""
@@ -236,13 +250,7 @@ Write-Output "  rganonymize classify --database-engine SqlServer --connection-st
 Write-Output "*********************************************************************************************************"
 Write-Output ""
 
-if (-not $autoContinue){
-    $continue = Read-Host "Continue? (y/n)"
-    if ($continue -notlike "y"){
-        Write-output 'Response not like "y". Teminating script.'
-        break
-    }
-}
+Prompt-Continue
 
 Write-Output "Creating a classification.json file in $output"
 rganonymize classify --database-engine SqlServer --connection-string=$targetConnectionString --classification-file "$output\classification.json" --output-all-columns
@@ -263,13 +271,7 @@ Write-Output "  rganonymize map --classification-file `"$output\classification.j
 Write-Output "*********************************************************************************************************"
 Write-Output ""
 
-if (-not $autoContinue){
-    $continue = Read-Host "Continue? (y/n)"
-    if ($continue -notlike "y"){
-        Write-output 'Response not like "y". Teminating script.'
-        break
-    }
-}
+Prompt-Continue
 
 Write-Output "Creating a masking.json file based on contents of classification.json in $output"
 rganonymize map --classification-file="$output\classification.json" --masking-file="$output\masking.json"
@@ -289,13 +291,7 @@ Write-Output "  rganonymize mask --database-engine SqlServer --connection-string
 Write-Output "*********************************************************************************************************"
 Write-Output ""
 
-if (-not $autoContinue){
-    $continue = Read-Host "Continue? (y/n)"
-    if ($continue -notlike "y"){
-        Write-output 'Response not like "y". Teminating script.'
-        break
-    }
-}
+Prompt-Continue
 
 Write-Output "Masking target database, based on contents of masking.json file in $output"
 rganonymize mask --database-engine SqlServer --connection-string=$targetConnectionString --masking-file="$output\masking.json"

@@ -203,13 +203,16 @@ else {
 Write-Output "*********************************************************************************************************"
 Write-Output ""
 
-if (-not $autoContinue){
+if (-not $autoContinue) {
     $continue = Read-Host "Continue? (y/n)"
-    if ($continue -notlike "y"){
-        Write-output 'Response not like "y". Teminating script.'
+    if ($continue -eq "n") {
+        Write-Output 'User chose "n". Terminating script.'
         break
+    } elseif ($continue -ne "y") {
+        Write-Output 'Invalid response. Please enter "y" or "n".'
     }
 }
+
 
 # running subset
 Write-Output ""

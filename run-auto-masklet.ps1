@@ -210,21 +210,22 @@ function Prompt-Continue {
         [bool]$autoContinue = $false
     )
 
-    $continueLoop = $true
+    if ($autoContinue) {
+        Write-Output 'Auto-continue mode enabled. Proceeding without user input.'
+    } else {
+        $continueLoop = $true
 
-    while ($continueLoop) {
-        if (-not $autoContinue) {
+        while ($continueLoop) {
             $continue = Read-Host "Continue? (y/n)"
             switch ($continue.ToLower()) {
                 "y" { Write-Output 'User chose to continue.'; $continueLoop = $false }
                 "n" { Write-Output 'User chose "n". Terminating script.'; exit }
                 default { Write-Output 'Invalid response. Please enter "y" or "n".' }
             }
-        } else {
-            $continueLoop = $false
         }
     }
 }
+
 
 Prompt-Continue
 

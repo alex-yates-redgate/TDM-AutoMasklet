@@ -206,9 +206,6 @@ Write-Output ""
 # Creating the function for Y/N prompt
 
 function Prompt-Continue {
-    param (
-        [bool]$autoContinue = $false
-    )
 
     if ($autoContinue) {
         Write-Output 'Auto-continue mode enabled. Proceeding without user input.'

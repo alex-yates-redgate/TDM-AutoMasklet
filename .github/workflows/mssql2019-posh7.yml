@@ -9,9 +9,9 @@ on: # push, nightly, and on demand, for all branches
   workflow_dispatch:
 
 jobs:
-  run_masklet_psh7:
+  run-masklet-psh7:
     runs-on: windows-latest
-    name: run_masklet_psh7
+    name: run-masklet-psh7
 
     steps:
       - name: Checkout code

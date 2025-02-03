@@ -90,7 +90,7 @@ jobs:
           Write-Output 'Running Auto-Masklet...'
           Write-Output '  -sqlInstance ${{ steps.createDc.outputs.instance }}'
           Write-Output '  -sqlUser ${{ steps.createDc.outputs.dbUser }}'
-          .\run-auto-masklet.ps1 -sqlUser '${{ steps.createDc.outputs.dbUser }}' -sqlPassword '${{ steps.createDc.outputs.dbPassword }}' -sqlInstance '${{ steps.createDc.outputs.instance }}' -autoContinue -skipAuth
+          .\run-auto-masklet.ps1 -sqlUser '${{ steps.createDc.outputs.dbUser }}' -sqlPassword '${{ steps.createDc.outputs.dbPassword }}' -sqlInstance '${{ steps.createDc.outputs.instance }}' -autoContinue -skipAuth -iAgreeToTheRedgateEula
 
       - name: Validating results
         shell: powershell

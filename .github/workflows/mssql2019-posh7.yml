@@ -9,7 +9,7 @@ on: # push, PR, nightly, and on demand, for all branches
   workflow_dispatch:
 
 jobs:
-  run_auto-masklet:
+  run_masklet_psh7:
     runs-on: windows-latest
     name: run_masklet_psh7
 

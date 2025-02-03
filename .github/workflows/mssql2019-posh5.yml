@@ -1,6 +1,6 @@
 name: mssql2019-posh5
 
-on: # push, nightly, and on demand, for all branches 
+on: # push, pr, nightly, and on demand, for all branches 
   push:
     branches-ignore:  # Prevents duplicate runs on PRs
       - main

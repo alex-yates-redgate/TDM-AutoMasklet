@@ -2,8 +2,11 @@ name: mssql2019-posh7
 
 on: # push, nightly, and on demand, for all branches 
   push:
+    branches-ignore:  # Prevents duplicate runs on PRs
+      - main
+  pull_request:  # Ensures PRs to main must pass the check
     branches:
-      - '**'                     
+      - main                    
   schedule:
     - cron: '0 3 * * *' 
   workflow_dispatch:

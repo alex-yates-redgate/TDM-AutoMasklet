@@ -1,6 +1,6 @@
 name: mssql2019-posh5
 
-on: # push, PR, nightly, and on demand, for all branches 
+on: # push, nightly, and on demand, for all branches 
   push:
     branches:
       - '**'                       
@@ -9,7 +9,7 @@ on: # push, PR, nightly, and on demand, for all branches
   workflow_dispatch:
 
 jobs:
-  run_masklet_psh5: # Updated job name to match the required check name
+  run_masklet_psh5:
     runs-on: windows-latest
     name: run_masklet_psh5
 

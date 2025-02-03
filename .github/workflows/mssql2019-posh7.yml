@@ -1,6 +1,6 @@
 name: mssql2019-posh7
 
-on: # push, PR, nightly, and on demand, for all branches 
+on: # push, nightly, and on demand, for all branches 
   push:
     branches:
       - '**'                     

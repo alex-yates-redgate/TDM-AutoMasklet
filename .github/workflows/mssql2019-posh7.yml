@@ -1,19 +1,20 @@
 name: mssql2019-posh7
 
-on:
+on: # push, pr, nightly, and on demand, for all branches 
   push:
-    pull_request:    # Run on pull requests
-      types: [opened, synchronize, reopened]
+    branches-ignore:  # Prevents duplicate runs on PRs
+      - main
+  pull_request:  # Ensures PRs to main must pass the check
     branches:
-      - '**'             # Run on all branches
+      - main                    
   schedule:
-    - cron: '0 3 * * *'  # Runs at 3am UTC every day
+    - cron: '0 3 * * *' 
   workflow_dispatch:
 
 jobs:
-  run_auto-masklet:
+  run-masklet-psh7:
     runs-on: windows-latest
-    name: run_masklet_psh7
+    name: run-masklet-psh7
 
     steps:
       - name: Checkout code

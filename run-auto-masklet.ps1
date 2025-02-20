@@ -7,8 +7,24 @@ param (
     $backupPath = "",
     $databaseName = "Northwind",
     [switch]$autoContinue,
-    [switch]$skipAuth
+    [switch]$skipAuth,
+    [switch]$iAgreeToTheRedgateEula
 )
+
+# Userts must agree to the Redgate Eula, either by using the -iAgreeToTheRedgateEula parameter, or by responding to a prompt
+if (-not $iAgreeToTheRedgateEula){
+    if ($autoContinue){
+        Write-Error 'If using the -autoContinue parameter, the -iAgreeToTheRedgateEula parameter is also required.'
+        break
+    }
+    else {
+        $eulaResponse = Read-Host "Do you agree to the Redgate End User License Agreement (EULA)? (y/n)"
+        if ($eulaResponse -notlike "y"){
+            Write-output 'Response not like "y". Teminating script.'
+            break
+        }
+    }
+}
 
 # Configuration
 $sourceDb = "${databaseName}_FullRestore"

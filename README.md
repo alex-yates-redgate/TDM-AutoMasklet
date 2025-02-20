@@ -68,5 +68,8 @@ Can you subset and mask one of your own databases?
 
 For more information, either contact your Redgate Account Manager, or email us at sales@red-gate.com.
 
+## Subsetting Options File (rgsubset-options-northwind.json) Description
+This file defines how rgsubset will perform the subset on the target database. The file defines a subset by filter query, with dbo.Orders as the starting table and OrderId < 10260. Furthermore, the includeTableRowsThreshold is set to 1. By default the value is 300, so by including this parameter we are telling rgsubset to forcibly bring in any tables with 1 or less rows, which is none. Without this parameter the subsetting can seem to perform unexpectedly on very small databases, like the one in this example. The dbo.Customers table should bring through around 12 rows aswell, but without this parameter rgsubset will populate the dbo.Customers table with all it's original data.
+
 ## Work to do:
 - Move this to an official Redgate repository.

@@ -10,5 +10,5 @@
       "filterClause": "OrderId < 10260"
     }
   ],
-  "includeTableRowsThreshold": 1
+  "includeTablesRowThreshold": 1
 }

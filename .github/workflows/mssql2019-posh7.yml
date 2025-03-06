@@ -62,20 +62,18 @@ jobs:
                   $output = .\rgclone get di $emptyDiName --ignore-not-found -o json
                   $imageStatus = ($output | ConvertFrom-Json).Status
                   $elapsedSeconds = $stopwatch.Elapsed.Seconds
+                  Write-Output "  ${elapsedSeconds} seconds: Image status is $imageStatus"
 
-                  if ($imageStatus -notlike "Completed") {
-                      Write-Output "  ${elapsedSeconds} seconds: Image status is $imageStatus"
-                  }
                   if ($imageStatus -like "Completed") {
                       $stopwatch.Stop()
                       break
                   }
-                  if ($imageStatus -like "Create Failed") {
+                  elseif ($imageStatus -like "Create Failed") {
                       Write-Error "Image creation failed!"
                       $stopwatch.Stop()
                       break
                   }
-                  if ($imageStatus -notlike "Pending") {
+                  elseif ($imageStatus -notlike "Pending") {
                       Write-Warning "  ${elapsedSeconds} seconds: Image state is neither "Completed", "Failed", nor "Pending". Something unexpected happened. Exiting."
                       $stopwatch.Stop()
                       break

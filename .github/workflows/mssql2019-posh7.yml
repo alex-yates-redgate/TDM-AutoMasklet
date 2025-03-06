@@ -12,7 +12,7 @@ on: # push, pr, nightly, and on demand, for all branches
   workflow_dispatch:
 
 jobs:
-  run-masklet-psh7:
+  run-masklet-sql19-psh7:
     runs-on: windows-latest
     name: run-masklet-psh7
 
@@ -46,11 +46,49 @@ jobs:
         run: |
           $emptyDiName = 'autoMasklet-sqlserver-2019-empty'
           $output = .\rgclone get di $emptyDiName --ignore-not-found -o json
+          $imageStatus = ($output | ConvertFrom-Json).Status
           if ($output -eq $null -or $output -eq "") {
               Write-Output "Image does not exist. Creating image..."
               .\rgclone create di -f .\helper_scripts\empty-image-2019.yaml
-          } else {
-              Write-Output "Image already exists. Moving on..."
+          } 
+          else if ($imageStatus -like "Completed") {
+              Write-Error "Image already exists. Moving on..."
+          } 
+          else if ($imageStatus -like "Pending") {
+              Write-Output "Image creation is Pending. Waiting until ready. (Image creation usually takes about 60 seconds)..."
+              $stopwatch =  [system.diagnostics.stopwatch]::StartNew()
+              while ($stopwatch.Elapsed.Seconds -lt 315) {
+                  Start-Sleep -Seconds 10
+                  $output = .\rgclone get di $emptyDiName --ignore-not-found -o json
+                  $imageStatus = ($output | ConvertFrom-Json).Status
+                  $elapsedSeconds = $stopwatch.Elapsed.Seconds
+
+                  if ($imageStatus -notlike "Completed") {
+                      Write-Output "  ${elapsedSeconds} seconds: Image status is $imageStatus"
+                  }
+                  if ($imageStatus -like "Completed") {
+                      $stopwatch.Stop()
+                      break
+                  }
+                  if ($imageStatus -like "Create Failed") {
+                      Write-Error "Image creation failed!"
+                      $stopwatch.Stop()
+                      break
+                  }
+                  if ($imageStatus -notlike "Pending") {
+                      Write-Warning "  ${elapsedSeconds} seconds: Image state is neither "Completed", "Failed", nor "Pending". Something unexpected happened. Exiting."
+                      $stopwatch.Stop()
+                      break
+                  }                  
+                  if ($elapsedSeconds -ge 300) {
+                      Write-Warning "  ${elapsedSeconds} seconds: Image creation is taking longer than expected. Crossing our fingers and moving on..."
+                      $stopwatch.Stop()
+                      break
+                  }   
+              }
+          }
+          else {
+              Write-Warning "Image is in an unexpected state (neither "Completed", "Pending", nor NULL). Image status is: $imageStatus"
           }
                     
       - name: Create data container

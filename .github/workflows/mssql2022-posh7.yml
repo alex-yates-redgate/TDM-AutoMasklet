@@ -1,4 +1,4 @@
-name: mssql2019-posh5
+name: mssql2022-posh7
 
 on: # push, pr, nightly, and on demand, for all branches 
   push:
@@ -6,15 +6,15 @@ on: # push, pr, nightly, and on demand, for all branches
       - main
   pull_request:  # Ensures PRs to main must pass the check
     branches:
-      - main                      
+      - main                    
   schedule:
     - cron: '0 3 * * *' 
   workflow_dispatch:
 
 jobs:
-  run-masklet-psh5:
+  run-masklet-psh7:
     runs-on: windows-latest
-    name: run-masklet-psh5
+    name: run-masklet-psh7
 
     steps:
       - name: Checkout code
@@ -44,11 +44,11 @@ jobs:
           RGCLONE_API_ENDPOINT: ${{ secrets.RGCLONE_API_ENDPOINT }}
           RGCLONE_ACCESS_TOKEN: ${{ secrets.RGCLONE_ACCESS_TOKEN }}
         run: |
-          $emptyDiName = 'autoMasklet-sqlserver-2019-empty'
+          $emptyDiName = 'autoMasklet-sqlserver-2022-empty'
           $output = .\rgclone get di $emptyDiName --ignore-not-found -o json
           if ($output -eq $null -or $output -eq "") {
               Write-Output "Image does not exist. Creating image..."
-              .\rgclone create di -f .\helper_scripts\empty-image-2019.yaml
+              .\rgclone create di -f .\helper_scripts\empty-image-2022.yaml
           } else {
               Write-Output "Image already exists. Moving on..."
           }
@@ -61,7 +61,7 @@ jobs:
         run: |
           # Create an empty SQL Server instance on which to run auto-masklet
           Write-Output "Creating data container"
-          $emptyDiName = 'autoMasklet-sqlserver-2019-empty'
+          $emptyDiName = 'autoMasklet-sqlserver-2022-empty'
           $output = .\rgclone create dc -i $emptyDiName -t 20m -o json | ConvertFrom-Json
           $dbPassword = $output.password
           $dbUser = $output.user
@@ -75,25 +75,25 @@ jobs:
           echo "::set-output name=dbPassword::$dbPassword"
           echo "::set-output name=instance::$instance"
 
-      - name: Run AutoMasklet in PowerShell 5
-        shell: powershell
+      - name: Run AutoMasklet in PowerShell 7
+        shell: pwsh
         env:
-          REDGATE_LICENSING_PERMIT: ${{ secrets.REDGATE_LICENSING_PERMIT  }}
+          REDGATE_LICENSING_PERMIT: ${{ secrets.REDGATE_LICENSING_PERMIT }}
         run: |
-          Write-Output 'Running in PowerShell 5'
+          Write-Output 'Running in PowerShell 7'
           $PSVersionTable
           $psVersion = $PSVersionTable.PSVersion.Major
-          if ($psVersion -notlike "5"){
-            Write-Error "PowerShell version should be 5, but it is $psVersion"
+          if ($psVersion -notlike "7"){
+            Write-Error "PowerShell version should be 7, but it is $psVersion"
             exit 1
           }
           Write-Output 'Running Auto-Masklet...'
-          Write-Output '  -sqlInstance ${{ steps.createDc.outputs.instance }}'
-          Write-Output '  -sqlUser ${{ steps.createDc.outputs.dbUser }}'
+          Write-Output "  -sqlInstance '${{ steps.createDc.outputs.instance }}'"
+          Write-Output "  -sqlUser '${{ steps.createDc.outputs.dbUser }}'"
           .\run-auto-masklet.ps1 -sqlUser '${{ steps.createDc.outputs.dbUser }}' -sqlPassword '${{ steps.createDc.outputs.dbPassword }}' -sqlInstance '${{ steps.createDc.outputs.instance }}' -autoContinue -skipAuth -iAgreeToTheRedgateEula
-
+  
       - name: Validating results
-        shell: powershell
+        shell: pwsh
         if: ${{ always() }}
         run: |
           import-module dbatools
@@ -122,3 +122,5 @@ jobs:
           } else {
             Write-Output "rganonymize ran successfully"
           }
+
+

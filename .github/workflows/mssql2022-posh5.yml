@@ -1,4 +1,4 @@
-name: mssql2019-posh5
+name: mssql2022-posh5
 
 on: # push, pr, nightly, and on demand, for all branches 
   push:
@@ -44,11 +44,11 @@ jobs:
           RGCLONE_API_ENDPOINT: ${{ secrets.RGCLONE_API_ENDPOINT }}
           RGCLONE_ACCESS_TOKEN: ${{ secrets.RGCLONE_ACCESS_TOKEN }}
         run: |
-          $emptyDiName = 'autoMasklet-sqlserver-2019-empty'
+          $emptyDiName = 'autoMasklet-sqlserver-2022-empty'
           $output = .\rgclone get di $emptyDiName --ignore-not-found -o json
           if ($output -eq $null -or $output -eq "") {
               Write-Output "Image does not exist. Creating image..."
-              .\rgclone create di -f .\helper_scripts\empty-image-2019.yaml
+              .\rgclone create di -f .\helper_scripts\empty-image-2022.yaml
           } else {
               Write-Output "Image already exists. Moving on..."
           }
@@ -61,7 +61,7 @@ jobs:
         run: |
           # Create an empty SQL Server instance on which to run auto-masklet
           Write-Output "Creating data container"
-          $emptyDiName = 'autoMasklet-sqlserver-2019-empty'
+          $emptyDiName = 'autoMasklet-sqlserver-2022-empty'
           $output = .\rgclone create dc -i $emptyDiName -t 20m -o json | ConvertFrom-Json
           $dbPassword = $output.password
           $dbUser = $output.user

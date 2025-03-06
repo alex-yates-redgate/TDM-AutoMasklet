@@ -14,7 +14,7 @@ on: # push, pr, nightly, and on demand, for all branches
 jobs:
   run-masklet-sql19-psh5:
     runs-on: windows-latest
-    name: run-masklet-psh5
+    name: run-masklet-sql19-psh5
 
     steps:
       - name: Checkout code

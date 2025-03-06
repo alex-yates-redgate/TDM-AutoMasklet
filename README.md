@@ -53,7 +53,7 @@ cd TDM-AutoMasklet      # Navigate to the directory you cloned the repo to/extra
 ```
 4. If you ran the script without a custom backup file, it will create a couple of sample databases for you (by default, Northwind_FullRestore and Northwind_Subset). If these databases already exist, they will be dropped and recreated.<br />
 If you ran the script with a custom backup file, it will create the databases from your provided backup file (database_name_FullRestore and database_name_Subset).<br />
-The script will then pause and walk you through each of the major steps requiredd to subset and anonymize a database. Follow the instructions, and pay particular attention to each of the "Observe" and "Next" blocks, before continuing to the next stage.
+The script will then pause and walk you through each of the major steps required to subset and anonymize a database. Follow the instructions, and pay particular attention to each of the "Observe" and "Next" blocks, before continuing to the next stage.
 
 _Notes about the script:_
 - _If you do not have dbatools or rganonymize/rgsubsetter installed already, you will need to execute run-auto-masklet.ps1 as admin (the first time) to perform the download/install._
@@ -67,6 +67,9 @@ After completing this worked example, I encourage you to review the following te
 Can you subset and mask one of your own databases?
 
 For more information, either contact your Redgate Account Manager, or email us at sales@red-gate.com.
+
+## Subsetting Options File (rgsubset-options-northwind.json) Description
+This file defines how rgsubset will perform the subset on the target database. The file defines a subset by filter query, with dbo.Orders as the starting table and OrderId < 10260. Furthermore, the includeTableRowsThreshold is set to 1. By default the value is 300, so by including this parameter we are telling rgsubset to forcibly bring in any tables with 1 or less rows, which is none. Without this parameter the subsetting can seem to perform unexpectedly on very small databases, like the one in this example. The dbo.Customers table should bring through around 12 rows aswell, but without this parameter rgsubset will populate the dbo.Customers table with all it's original data.
 
 ## Work to do:
 - Move this to an official Redgate repository.

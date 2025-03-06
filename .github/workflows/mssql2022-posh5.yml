@@ -52,7 +52,7 @@ jobs:
               .\rgclone create di -f .\helper_scripts\empty-image-2022.yaml
           } 
           elseif ($imageStatus -like "Completed") {
-              Write-Error "Image already exists. Moving on..."
+              Write-Output "Image already exists. Moving on..."
           } 
           elseif ($imageStatus -like "Pending") {
               Write-Output "Image creation is Pending. Waiting until ready. (Image creation usually takes about 60 seconds)..."

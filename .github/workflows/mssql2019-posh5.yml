@@ -57,11 +57,11 @@ jobs:
           elseif ($imageStatus -like "Pending") {
               Write-Output "Image creation is Pending. Waiting until ready. (Image creation usually takes about 60 seconds)..."
               $stopwatch =  [system.diagnostics.stopwatch]::StartNew()
-              while ($stopwatch.Elapsed.Seconds -lt 315) {
+              while ($stopwatch.Elapsed.TotalSeconds -lt 315) {
                   Start-Sleep -Seconds 10
                   $output = .\rgclone get di $emptyDiName --ignore-not-found -o json
                   $imageStatus = ($output | ConvertFrom-Json).Status
-                  $elapsedSeconds = $stopwatch.Elapsed.Seconds
+                  $elapsedSeconds = $stopwatch.Elapsed.TotalSeconds
                   Write-Output "  ${elapsedSeconds} seconds: Image status is $imageStatus"
 
                   if ($imageStatus -like "Completed") {

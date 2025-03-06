@@ -1,4 +1,4 @@
-# TDM Auto-Masklet has moved!
+# TDM-AutoMasklet has moved!
 The new, official, home for "TDM AutoPilot" is here:
 https://github.com/red-gate/TDM-AutoPilot 
 

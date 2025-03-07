@@ -8,7 +8,7 @@ param (
     $databaseName = "Northwind",
     [switch]$autoContinue,
     [switch]$skipAuth,
-    [switch]$noRestore
+    [switch]$noRestore,
     [switch]$iAgreeToTheRedgateEula
 )
 
